@@ -70,19 +70,66 @@ Raphael(function () {
 	// draw the bg
     //r.image(img.src, 0, 0, 640, 480);
 
+    var scheme = "ws";
+    if (document.location.protocol === "https:") {
+        scheme += "s";
+    }
+    var ws = new WebSocket(scheme + "://" + document.location.host + "/ws");
 
-    var _board = {
-        _id: 1,
-        name: "test",
-        numRounds: 2,
-        colors: {
-            red: "#f00",
-            green: "#f00",
-            blue: "#f00",
-        },
-        cells: [],
-        edges: [],
+    ws.onerror = function (event) {
+        console.log(event);
+        document.getElementById("errorbanner").append("ERROR: Unable to connect to server, try reloading");
     };
+
+    ws.onopen = function (event) {
+        console.log("connected");
+        joinGame({ gameShortCode: "", playerName: "you" });
+    };
+
+    ws.onmessage = function (event) {
+        var inmsg = {};
+        try {
+            inmsg = JSON.parse(event.data);
+        } catch (error) {
+            console.log("Unable to parse data from server: " + event.data);
+            return;
+        }
+
+        console.log("received", inmsg);
+        if (inmsg.type === "joinedGame") {
+            _state = inmsg.state;
+
+            populateDisplay(_display, _state);
+
+            makeSelected(_display, _state);
+            makeSelectable(_display, _state);
+
+        } else if (inmsg.type === "newPlay") {
+            _state = inmsg.state;
+
+            makeSelected(_display, _state);
+            makeSelectable(_display, _state);
+
+        } else {
+            console.log("Unknown message", inmsg);
+        }
+    };
+
+
+    function sendMessage(type, info) {
+        var msg = Object.assign({ auth: 1, type }, info);
+        console.log("sending", msg);
+        ws.send(JSON.stringify(msg));
+    }
+
+    function joinGame({gameShortCode, playerName}) {
+        sendMessage("joinGame", { gameShortCode, playerName });
+    }
+
+    function sendMove({edgeIndex}) {
+        sendMessage("doMove", { gameid: 1, move: edgeIndex });
+    }
+
 
     var _state = {
         _id: 1,
@@ -157,8 +204,14 @@ Raphael(function () {
 	board.cells[27].contents = "dressing";
 	board.cells[12].contents = "cucumber";
     }
-    generateRandomBoard(_display, _board);
-    _state.board = _board;
+
+    function makeSelected(display, state) {
+        for (var selected of state.players[0].moves) {
+            addClass(_display.edges[selected].node, "selected");
+            removeClass(_display.edges[selected].node, "unselected");
+            removeClass(_display.edges[selected].node, "selectable");
+        }
+    }
 
     function makeSelectable(display, state) {
         var currentColors = getCurrentColors(state);
@@ -180,7 +233,7 @@ Raphael(function () {
     }
 
 	function selectLine(line) {
-        swapClass(line, "selectable", "selected");
+        swapClass(line.node, "selectable", "selected");
     }
 
 	function finishSelecting() {
@@ -190,7 +243,7 @@ Raphael(function () {
         }
     }
 
-	function makeline(board, edge) {
+	function makeLine(board, edgeIndex, edge) {
 		var line = r.path("M" + board.cells[edge[0]].x + " " + board.cells[edge[0]].y +
                           "L" + board.cells[edge[1]].x + " " + board.cells[edge[1]].y);
         var className = "unselected";
@@ -201,6 +254,7 @@ Raphael(function () {
             className += " " + board.cells[edge[1]].color;
         }
         line.attr("class", className);
+        line.data("edgeIndex", edgeIndex);
 		line.hover(function() {
 			if (hasClass(line.node, "selectable")) {
 				_display.hoverLineSound.play();
@@ -208,13 +262,14 @@ Raphael(function () {
 		}).click(function() {
 			if (hasClass(line.node, "selectable")) {
 				_display.selectLineSound.play();
-                selectLine(line.node);
-                finishSelecting();
-
-				setTimeout(function () {
-                    generateRandomPlay(_state);
-                    makeSelectable(_display, _state);
-				}, 1000);
+                selectLine(line);
+				//setTimeout(function () {
+                    finishSelecting();
+                //}, 0);
+                var edgeIndex = line.data("edgeIndex");
+				//setTimeout(function () {
+                    sendMove({edgeIndex});
+                //}, 0);
 			}
 		});
 		return line;
@@ -225,8 +280,9 @@ Raphael(function () {
             display.cells.push(r.path(makePolygonPath(cell.x, cell.y, 6, 25)).attr({"class": "cell " + cell.color}));
         }
 
-        for (var edge of state.board.edges) {
-            display.edges.push(makeline(state.board, edge));
+        for (var edgeIndex = 0; edgeIndex < state.board.edges.length; edgeIndex++) {
+            var edge = state.board.edges[edgeIndex];
+            display.edges.push(makeLine(state.board, edgeIndex, edge));
         }
 
         // draw the icons
@@ -258,11 +314,6 @@ Raphael(function () {
         //r.image("../assets/lettuce.png", 15+display.w, 15, 20, 20);
         //r.image("../assets/tomato.png", 15+display.w, 15+1.5*display.h, 20, 20);
     }
-
-    populateDisplay(_display, _state);
-
-    generateRandomPlay(_state);
-    makeSelectable(_display, _state);
 
 });
 

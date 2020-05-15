@@ -12,6 +12,16 @@ body {
     width: 640px;
 }
 
+#errorbanner {
+    top: 0px;
+    background-color: #f66;
+    color: black;
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+    /*display: none;*/
+}
+
 .unselected {
 /*
 	stroke: #000;
