@@ -93,6 +93,13 @@ Raphael(function () {
         }
     }
 
+	// draw the icons
+    r.image("../assets/lettuce.png", 15, 15, 20, 20);
+    r.image("../assets/lettuce.png", 15+w, 15, 20, 20);
+    r.image("../assets/tomato.png", 15+w, 15+1.5*h, 20, 20);
+
+
+
     for (var cell of cells) {
         r.path(NGon(cell.x, cell.y, 6, 25)).attr({"class": "cell " + cell.color});
     }
