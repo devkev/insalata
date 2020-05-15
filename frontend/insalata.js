@@ -173,6 +173,13 @@ Raphael(function () {
         return state.plays[state.plays.length - 1];
     }
 
+    function updateColors(state) {
+        var currentColors = getCurrentColors(state);
+
+        document.getElementById("color1").innerHTML = currentColors[0];
+        document.getElementById("color2").innerHTML = currentColors[1];
+    }
+
     function makeSelected(display, state) {
         for (var selected of state.players[0].moves) {
             addClass(_display.edges[selected].node, "selected");
@@ -198,6 +205,8 @@ Raphael(function () {
         for (var unselected of document.querySelectorAll(query)) {
             swapClass(unselected, "unselected", "selectable");
         }
+
+	updateColors(state);
     }
 
 	function selectLine(line) {
