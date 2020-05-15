@@ -42,6 +42,29 @@ Raphael(function () {
 	//var animeasing = "ease-in-out";
 	var animeasing = "linear";
 
+    var colors = [ "red", "green", "blue" ];
+    var colorsOrWild = Array.from(colors);
+    colorsOrWild.push("wild");
+
+    function randomColor() {
+        return colors[Math.floor(Math.random()*colors.length)];
+    }
+    function randomColorOrWild() {
+        return colorsOrWild[Math.floor(Math.random()*colorsOrWild.length)];
+    }
+
+    var color1;
+    var color2;
+
+    function chooseColors() {
+        //color1 = "green";
+        //color2 = "blue";
+        //color1 = randomColor();
+        //color2 = randomColor();
+        color1 = randomColorOrWild();
+        color2 = randomColorOrWild();
+    }
+
     var cellSize = 25;
     var w = Math.sqrt(3) * cellSize;
     var h = 2 * cellSize;
@@ -49,18 +72,23 @@ Raphael(function () {
     var numCells = { x: 10, y: 10 };
     var cells = [];
     var edges = [];
-    var colors = [ "red", "green", "blue" ];
     for (var row = 0; row < numCells.y; row++) {
         for (var col = 0; col < numCells.x; col++) {
-            cells.push({ x: topLeft.x + col*w + (row%2?w/2:0), y: topLeft.y + row*h*3/4, color: colors[Math.floor(Math.random()*3)]});
+            cells.push({ x: topLeft.x + col*w + (row%2?w/2:0), y: topLeft.y + row*h*3/4, color: randomColor()});
             if (col > 0) {
                 edges.push([cells.length-1, cells.length-1 - 1]);
             }
             if (row > 0) {
                 edges.push([cells.length-1, cells.length-1 - numCells.x]);
-            }
-            if (row > 0 && (col > 0 || row%2)) {
-                edges.push([cells.length-1, cells.length-1 - numCells.x + (row%2?1:-1)]);
+                if (row%2) {
+                    if (col < numCells.x - 1) {
+                        edges.push([cells.length-1, cells.length-1 - numCells.x + 1]);
+                    }
+                } else {
+                    if (col > 0) {
+                        edges.push([cells.length-1, cells.length-1 - numCells.x - 1]);
+                    }
+                }
             }
         }
     }
@@ -69,30 +97,98 @@ Raphael(function () {
         r.path(NGon(cell.x, cell.y, 6, 25)).attr({"class": "cell " + cell.color});
     }
 
-	function selectline(line) {
-        line.attr("class", "selected");
-        lines.exclude(line);
-        selectedlines.push(line);
+    function _getClasses(node) {
+        var classes = {};
+        if (typeof(node.classList) !== "undefined") {
+            for (var aClass of node.classList) {
+                classes[aClass] = 1;
+            }
+        }
+        return classes;
     }
 
-	function makeline(path) {
-		var line = r.path(path);
+    function _setClasses(node, newClasses) {
+        node.setAttribute("class", Object.keys(newClasses).join(" "));
+    }
+
+    function addClass(node, className) {
+        var classes = _getClasses(node);
+        classes[className] = true;
+        _setClasses(node, classes);
+    }
+
+    function removeClass(node, className) {
+        var classes = _getClasses(node);
+        delete classes[className];
+        _setClasses(node, classes);
+    }
+
+    function swapClass(node, removeClassName, addClassName) {
+        var classes = _getClasses(node);
+        delete classes[removeClassName];
+        classes[addClassName] = true;
+        _setClasses(node, classes);
+    }
+
+    function hasClass(node, className) {
+        var classes = _getClasses(node);
+        return !!classes[className];
+    }
+
+
+    function makeselectable() {
+        var query = ".unselected";
+        if (color1 === "wild" && color2 === "wild") {
+            // nothing, all edges are good
+        } else if (color1 === "wild") {
+            query += "." + color2;
+        } else if (color2 === "wild") {
+            query += "." + color1;
+        } else {
+            query += "." + color1 + "-" + color2;
+        }
+        for (var unselected of document.querySelectorAll(query)) {
+            swapClass(unselected, "unselected", "selectable");
+        }
+    }
+
+	function selectline(line) {
+        swapClass(line, "selectable", "selected");
+    }
+
+	function finishselecting() {
+        var selectables = document.getElementsByClassName("selectable");
+        while (selectables.length > 0) {
+            swapClass(selectables[0], "selectable", "unselected");
+        }
+    }
+
+	function makeline(edge) {
+		var line = r.path("M" + cells[edge[0]].x + " " + cells[edge[0]].y +
+                          "L" + cells[edge[1]].x + " " + cells[edge[1]].y);
+        var className = "unselected";
+        className += " " + cells[edge[0]].color + "-" + cells[edge[1]].color;
+        className += " " + cells[edge[0]].color;
+        if (cells[edge[1]].color !== cells[edge[0]].color ) {
+            className += " " + cells[edge[1]].color + "-" + cells[edge[0]].color;
+            className += " " + cells[edge[1]].color;
+        }
+        line.attr("class", className);
 		line.hover(function() {
-			if (line.attr("class") == "selectable") {
+			if (hasClass(line.node, "selectable")) {
 				hoverLineSound.play();
 			}
 		}).click(function() {
-			if (line.attr("class") == "selectable") {
+			if (hasClass(line.node, "selectable")) {
+                console.log("click");
 				selectLineSound.play();
-                selectline(line);
+                selectline(line.node);
+                finishselecting();
 
-				var selectables = document.getElementsByClassName("selectable");
-				while (selectables.length > 0) {
-					selectables[0].setAttribute("class", "unselected");
-				}
 				setTimeout(function () {
-					lines.attr({"class": "selectable"});
-				}, 2000);
+                    chooseColors();
+                    makeselectable();
+				}, 1000);
 			} else {
 				//lines.attr({"class": "selectable"});
 			}
@@ -100,28 +196,19 @@ Raphael(function () {
 		return line;
 	}
 
-	function makepath(edge) {
-        return "M" + cells[edge[0]].x + " " + cells[edge[0]].y +
-               "L" + cells[edge[1]].x + " " + cells[edge[1]].y;
-    }
-
-
 	var lines = r.set();
-
     for (var edge of edges) {
-        lines.push(makeline(makepath(edge)));
+        lines.push(makeline(edge));
     }
 
-	var selectedlines = r.set();
-    selectline(lines[numCells.x-1]);
-    selectline(lines[numCells.x-1]);
-    selectline(lines[0]);
-    selectline(lines[0]);
-    selectline(lines[1]);
+    chooseColors();
+    makeselectable();
 
-	lines.attr({"class": "selectable"});
-
-	selectedlines.attr({"class": "selected"});
+    selectline(lines[numCells.x-1].node);
+    selectline(lines[numCells.x-1].node);
+    selectline(lines[0].node);
+    selectline(lines[0].node);
+    selectline(lines[1].node);
 
 });
 
