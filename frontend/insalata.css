@@ -49,14 +49,24 @@ body {
 .cell.icon {
 }
 
-.selected {
+.selected.interact {
+	stroke: #0000;
+	stroke-width: 0px;
+}
+
+.selected:not(.interact) {
 	stroke: #000;
 	stroke-width: 5px;
 }
 
-.selectable {
+.selectable.interact {
+	stroke: #0000;
+	stroke-width: 10px;
+}
+
+.selectable:not(.interact) {
 	stroke: #00f;
-	stroke-width: 5px;
+	stroke-width: 4px;
 	animation-duration: 1s;
 	animation-name: colorbounce;
 	animation-iteration-count: infinite;
@@ -80,13 +90,15 @@ body {
 	animation-name: unset;
 }
 */
-.selectable:hover {
+.selectable:not(.interact).hover {
 /*
 	animation-name: colorbouncehover;
 	animation-play-state: paused, running;
 */
+	stroke-width: 6px;
 	animation-duration: 1s, 0.5s;
 	animation-name: colorbounce, colorbouncehover;
+	animation-iteration-count: infinite;
 	animation-timing-function: ease-in-out, linear;
 	animation-direction: alternate, normal;
 }

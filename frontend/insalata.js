@@ -141,6 +141,7 @@ Raphael(function () {
         cellSize: 25,
         cells: r.set(),
         edges: r.set(),
+        edgesInteract: r.set(),
         sound: {
             selectLine: new Howl({ src: ['399934_1676145-lq.mp3'] }),
             hoverLine: new Howl({ src: ['338229_3972805-lq.mp3'] }),
@@ -197,6 +198,9 @@ Raphael(function () {
             addClass(_display.edges[selected].node, "selected");
             removeClass(_display.edges[selected].node, "unselected");
             removeClass(_display.edges[selected].node, "selectable");
+            addClass(_display.edgesInteract[selected].node, "selected");
+            removeClass(_display.edgesInteract[selected].node, "unselected");
+            removeClass(_display.edgesInteract[selected].node, "selectable");
         }
     }
 
@@ -221,48 +225,12 @@ Raphael(function () {
 	updateColors(state);
     }
 
-	function selectLine(line) {
-        swapClass(line.node, "selectable", "selected");
-    }
-
 	function finishSelecting() {
         var selectables = document.getElementsByClassName("selectable");
         while (selectables.length > 0) {
             swapClass(selectables[0], "selectable", "unselected");
         }
     }
-
-	function makeLine(board, edgeIndex, edge) {
-		var line = r.path("M" + board.cells[edge[0]].x + " " + board.cells[edge[0]].y +
-                          "L" + board.cells[edge[1]].x + " " + board.cells[edge[1]].y);
-        var className = "unselected";
-        className += " " + board.cells[edge[0]].color + "-" + board.cells[edge[1]].color;
-        className += " " + board.cells[edge[0]].color;
-        if (board.cells[edge[1]].color !== board.cells[edge[0]].color ) {
-            className += " " + board.cells[edge[1]].color + "-" + board.cells[edge[0]].color;
-            className += " " + board.cells[edge[1]].color;
-        }
-        line.attr("class", className);
-        line.data("edgeIndex", edgeIndex);
-		line.hover(function() {
-			if (hasClass(line.node, "selectable")) {
-				_display.sound.hoverLine.play();
-			}
-		}).click(function() {
-			if (hasClass(line.node, "selectable")) {
-				_display.sound.selectLine.play();
-                selectLine(line);
-				//setTimeout(function () {
-                    finishSelecting();
-                //}, 0);
-                var edgeIndex = line.data("edgeIndex");
-				//setTimeout(function () {
-                    sendMove({edgeIndex});
-                //}, 0);
-			}
-		});
-		return line;
-	}
 
     function populateDisplay(display, state) {
         for (var cell of state.board.cells) {
@@ -271,7 +239,48 @@ Raphael(function () {
 
         for (var edgeIndex = 0; edgeIndex < state.board.edges.length; edgeIndex++) {
             var edge = state.board.edges[edgeIndex];
-            display.edges.push(makeLine(state.board, edgeIndex, edge));
+
+            var path = "M" + state.board.cells[edge[0]].x + " " + state.board.cells[edge[0]].y +
+                       "L" + state.board.cells[edge[1]].x + " " + state.board.cells[edge[1]].y;
+            let line = r.path(path);
+            var className = "unselected";
+            className += " " + state.board.cells[edge[0]].color + "-" + state.board.cells[edge[1]].color;
+            className += " " + state.board.cells[edge[0]].color;
+            if (state.board.cells[edge[1]].color !== state.board.cells[edge[0]].color ) {
+                className += " " + state.board.cells[edge[1]].color + "-" + state.board.cells[edge[0]].color;
+                className += " " + state.board.cells[edge[1]].color;
+            }
+            line.attr("class", className);
+            line.data("edgeIndex", edgeIndex);
+            let lineInteract = r.path(path);
+            //line.hover(function() {
+            lineInteract.attr("class", className + " interact");
+            lineInteract.hover(function() {
+                if (hasClass(line.node, "selectable")) {
+                    _display.sound.hoverLine.play();
+                    addClass(line.node, "hover");
+                }
+            }, function() {
+                if (hasClass(line.node, "selectable")) {
+                    removeClass(line.node, "hover");
+                }
+            }).click(function() {
+                if (hasClass(line.node, "selectable")) {
+                    _display.sound.selectLine.play();
+                    swapClass(line.node, "selectable", "selected");
+                    swapClass(lineInteract.node, "selectable", "selected");
+                    //setTimeout(function () {
+                        finishSelecting();
+                    //}, 0);
+                    var edgeIndex = line.data("edgeIndex");
+                    //setTimeout(function () {
+                        sendMove({edgeIndex});
+                    //}, 0);
+                }
+            });
+
+            display.edges.push(line);
+            display.edgesInteract.push(lineInteract);
         }
 
         // draw the icons
@@ -325,6 +334,8 @@ Raphael(function () {
 				r.text(cell.x, cell.y, text);
 			}
 	    }
+
+        display.edgesInteract.toFront();
     }
 
 });
