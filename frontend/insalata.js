@@ -76,20 +76,24 @@ Raphael(function () {
     var numCells = { x: 10, y: 10 };
     var cells = [];
     var edges = [];
+    var colors = [ "red", "green", "blue" ];
     for (var row = 0; row < numCells.y; row++) {
         for (var col = 0; col < numCells.x; col++) {
-            cells.push({ x: topLeft.x + col*w + (row%2?w/2:0), y: topLeft.y + row*h*3/4, color: "blue" });
+            cells.push({ x: topLeft.x + col*w + (row%2?w/2:0), y: topLeft.y + row*h*3/4, color: colors[Math.floor(Math.random()*3)]});
             if (col > 0) {
                 edges.push([cells.length-1, cells.length-1 - 1]);
             }
             if (row > 0) {
                 edges.push([cells.length-1, cells.length-1 - numCells.x]);
             }
+            if (row > 0 && (col > 0 || row%2)) {
+                edges.push([cells.length-1, cells.length-1 - numCells.x + (row%2?1:-1)]);
+            }
         }
     }
 
     for (var cell of cells) {
-        r.path(NGon(cell.x, cell.y, 6, 25)).attr({"class": "cell"});
+        r.path(NGon(cell.x, cell.y, 6, 25)).attr({"class": "cell " + cell.color});
     }
 
 	function selectline(line) {
