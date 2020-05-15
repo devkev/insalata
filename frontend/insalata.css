@@ -1,0 +1,90 @@
+body {
+    background: #333;
+    color: #fff;
+    font: 300 100.1% "Helvetica Neue", Helvetica, "Arial Unicode MS", Arial, sans-serif;
+}
+#holder {
+    height: 480px;
+    left: 50%;
+    margin: -240px 0 0 -320px;
+    position: absolute;
+    top: 50%;
+    width: 640px;
+}
+
+.unselected {
+/*
+	stroke: #000;
+	stroke-width: 2px;
+	opacity: 25%;
+*/
+	stroke: #000;
+	stroke-width: 0px;
+	/*opacity: 0%;*/
+}
+
+.cell {
+	stroke: #000;
+	stroke-width: 2px;
+	fill: #00f4;
+}
+
+.selected {
+	stroke: #000;
+	stroke-width: 5px;
+}
+
+.selectable {
+	stroke: #00f;
+	stroke-width: 5px;
+	animation-duration: 1s;
+	animation-name: colorbounce;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+	/*animation-play-state: running, paused;*/
+}
+@keyframes colorbounce {
+  from {
+    stroke: #00f;
+  }
+
+  to {
+    stroke: #f00;
+  }
+}
+/*
+.selectable:hover {
+	stroke: #fff;
+	stroke-width: 5px;
+	animation-name: unset;
+}
+*/
+.selectable:hover {
+/*
+	animation-name: colorbouncehover;
+	animation-play-state: paused, running;
+*/
+	animation-duration: 1s, 0.5s;
+	animation-name: colorbounce, colorbouncehover;
+	animation-timing-function: ease-in-out, linear;
+	animation-direction: alternate, normal;
+}
+@keyframes colorbouncehover {
+  from {
+    stroke: #070;
+  }
+
+  25% {
+    stroke: #0f0;
+  }
+
+  75% {
+    stroke: #000;
+  }
+
+  to {
+    stroke: #070;
+  }
+}
+
