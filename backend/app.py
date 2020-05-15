@@ -1643,6 +1643,7 @@ async def websocket_handler(request):
                 elif inmsg["type"] == "doMove":
                     edgeIndex = int(inmsg["move"])
                     state["players"][0]["moves"].append(edgeIndex)
+                    state["players"][0]["score"] = state["players"][0]["score"] + 1
                     generateRandomPlay(state)
                     response = { "error": False, "type": "newPlay", "state": state }
 

@@ -101,11 +101,15 @@ Raphael(function () {
 
             populateDisplay(_display, _state);
 
+            document.getElementById("score").innerHTML = _state.players[0].score;
+
             makeSelected(_display, _state);
             makeSelectable(_display, _state);
 
         } else if (inmsg.type === "newPlay") {
             _state = inmsg.state;
+
+            document.getElementById("score").innerHTML = _state.players[0].score;
 
             makeSelected(_display, _state);
             makeSelectable(_display, _state);
