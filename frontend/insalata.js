@@ -102,6 +102,7 @@ Raphael(function () {
             populateDisplay(_display, _state);
 
             updateScores(_state);
+            updateIcons(_state);
 
             makeSelected(_display, _state);
             makeSelectable(_display, _state);
@@ -110,6 +111,7 @@ Raphael(function () {
             updateState(inmsg.state);
 
             updateScores(_state);
+            updateIcons(_state);
 
             makeSelected(_display, _state);
             makeSelectable(_display, _state);
@@ -142,6 +144,8 @@ Raphael(function () {
         cells: r.set(),
         edges: r.set(),
         edgesInteract: r.set(),
+        icons: {},
+        glows: {},
         sound: {
             selectLine: new Howl({ src: ['399934_1676145-lq.mp3'] }),
             hoverLine: new Howl({ src: ['338229_3972805-lq.mp3'] }),
@@ -157,6 +161,7 @@ Raphael(function () {
                 _display.sound.increaseScore.play();
             }
         }
+
         _state = newState;
     }
 
@@ -175,6 +180,23 @@ Raphael(function () {
             return total;
         } else {
             return playerScore;
+        }
+    }
+
+    function updateIcons(state) {
+        for (var connected_target in state.players[0].connected_targets) {
+            if ( ! (connected_target in _display.glows)) {
+                //_display.glows[connected_target] = _display.icons[connected_target].glow();
+                _display.glows[connected_target] = true;
+                addClass(_display.cells[connected_target].node, "highlight");
+            }
+        }
+        for (var connected_shop in state.players[0].connected_shops) {
+            if ( ! (connected_shop in _display.glows)) {
+                //_display.glows[connected_shop] = _display.icons[connected_shop].glow();
+                _display.glows[connected_shop] = true;
+                addClass(_display.cells[connected_shop].node, "highlight");
+            }
         }
     }
 
@@ -305,7 +327,7 @@ Raphael(function () {
 					break;
 			}
 			if (fileName != "") {
-				r.image("../assets/"+fileName, cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
+				display.icons[cell.num] = r.image("../assets/"+fileName, cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
 			}
 	    }
 
@@ -330,8 +352,9 @@ Raphael(function () {
 					break;
 			}
 			if (text != "") {
-				r.image("../assets/shop1.png", cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize-5)
-				r.text(cell.x, cell.y, text);
+                display.icons[cell.num] = r.set();
+				display.icons[cell.num].push(r.image("../assets/shop1.png", cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize-5));
+				display.icons[cell.num].push(r.text(cell.x, cell.y, text));
 			}
 	    }
 
