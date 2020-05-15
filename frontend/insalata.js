@@ -97,7 +97,7 @@ Raphael(function () {
 
         console.log("received", inmsg);
         if (inmsg.type === "joinedGame") {
-            _state = inmsg.state;
+            updateState(inmsg.state);
 
             populateDisplay(_display, _state);
 
@@ -107,7 +107,7 @@ Raphael(function () {
             makeSelectable(_display, _state);
 
         } else if (inmsg.type === "newPlay") {
-            _state = inmsg.state;
+            updateState(inmsg.state);
 
             updateScores(_state);
 
@@ -141,11 +141,23 @@ Raphael(function () {
         cellSize: 25,
         cells: r.set(),
         edges: r.set(),
-        selectLineSound: new Howl({ src: ['399934_1676145-lq.mp3'] }),
-        hoverLineSound: new Howl({ src: ['338229_3972805-lq.mp3'] }),
+        sound: {
+            selectLine: new Howl({ src: ['399934_1676145-lq.mp3'] }),
+            hoverLine: new Howl({ src: ['338229_3972805-lq.mp3'] }),
+            increaseScore: new Howl({ src: ['51715_113976-lq.mp3'] }),
+        },
     };
     _display.w = Math.sqrt(3) * _display.cellSize;
     _display.h = 2 * _display.cellSize;
+
+    function updateState(newState) {
+        if (_state) {
+            if (sumScore(newState.players[0].score) > sumScore(_state.players[0].score)) {
+                _display.sound.increaseScore.play();
+            }
+        }
+        _state = newState;
+    }
 
     function sumScore(playerScore) {
         if (Array.isArray(playerScore)) {
@@ -234,11 +246,11 @@ Raphael(function () {
         line.data("edgeIndex", edgeIndex);
 		line.hover(function() {
 			if (hasClass(line.node, "selectable")) {
-				_display.hoverLineSound.play();
+				_display.sound.hoverLine.play();
 			}
 		}).click(function() {
 			if (hasClass(line.node, "selectable")) {
-				_display.selectLineSound.play();
+				_display.sound.selectLine.play();
                 selectLine(line);
 				//setTimeout(function () {
                     finishSelecting();
