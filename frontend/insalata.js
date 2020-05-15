@@ -255,6 +255,15 @@ Raphael(function () {
     }
 
     function populateDisplay(display, state) {
+        var css = "";
+        for (var cellColor in state.board.cellColors) {
+            css += ".cell." + cellColor + " { fill: " + state.board.cellColors[cellColor].normal + "; } ";
+            css += ".cell." + cellColor + ".highlight { fill: " + state.board.cellColors[cellColor].highlight + "; } ";
+        }
+        var styleElement = document.createElement("style");
+        styleElement.appendChild(document.createTextNode(css));
+        document.getElementsByTagName("head")[0].appendChild(styleElement);
+
         for (var cell of state.board.cells) {
             display.cells.push(r.path(makePolygonPath(cell.x, cell.y, 6, 25)).attr({"class": "cell " + cell.color}));
         }

@@ -37,24 +37,6 @@ body {
 	stroke: #000;
 	stroke-width: 2px;
 }
-.cell.red {
-	fill: #f004;
-}
-.cell.red.highlight {
-	fill: #f00a;
-}
-.cell.green {
-	fill: #0f04;
-}
-.cell.green.highlight {
-	fill: #0f0a;
-}
-.cell.blue {
-	fill: #00f4;
-}
-.cell.blue.highlight {
-	fill: #00fa;
-}
 .cell.icon {
 }
 

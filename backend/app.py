@@ -16,10 +16,10 @@ board_json = '''{
   "_id": 1,
   "name": "test",
   "numRounds": 2,
-  "colors": {
-    "red": "#f00",
-    "green": "#f00",
-    "blue": "#f00"
+  "cellColors": {
+    "red": { "normal": "#f004", "highlight": "#f00a" },
+    "green": { "normal": "#0f04", "highlight": "#0f0a" },
+    "blue": { "normal": "#00f4", "highlight": "#00fa" }
   },
   "shopNames": [ "shopA", "shopB", "shopC", "shopD", "shopE" ],
   "targetsPoints": {
@@ -1664,7 +1664,7 @@ for cell in state["board"]["cells"]:
 
 
 def randomColorOrWild(board):
-    colorsOrWild = list(board["colors"].keys()).copy()
+    colorsOrWild = list(board["cellColors"].keys()).copy()
     colorsOrWild.append("wild");
     return random.choice(colorsOrWild)
 
