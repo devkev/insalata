@@ -30,20 +30,6 @@ Raphael(function () {
 	  src: ['338229_3972805-lq.mp3']
 	});
 
-/*
-    var r = Raphael("holder", 600, 540);
-    
-    r.image(img.src, 140, 140, 320, 240);
-    r.image(img.src, 140, 380, 320, 240).attr({
-        transform: "s1-1",
-        opacity: .5
-    });
-    r.rect(0, 380, 600, 160).attr({
-        fill: "90-#333-#333",
-        stroke: "none",
-        opacity: .5
-    });
-*/
     var r = Raphael("holder", 640, 480);
 
 	// draw the bg
@@ -55,19 +41,6 @@ Raphael(function () {
 
 	//var animeasing = "ease-in-out";
 	var animeasing = "linear";
-
-	var anim = Raphael.animation({ "stroke": "#f00"}, animdur, animeasing).repeat(Infinity);
-
-	var animfwd = Raphael.animation({ "stroke": "#f00"}, animdur, animeasing, function(el) {
-		//lines.animate(animbck);
-		dummy.animate(animbck);
-		lines.animateWith(dummy, animbck, animbck);
-	}).delay(animdur).repeat(Infinity);
-	var animbck = Raphael.animation({ "stroke": "#00f"}, animdur, animeasing, function(el) {
-	//	//lines.animate(animfwd);
-	//	dummy.animate(animfwd);
-	//	//lines.animateWith(dummy, animfwd, animfwd);
-	});
 
     var cellSize = 25;
     var w = Math.sqrt(3) * cellSize;
@@ -146,20 +119,9 @@ Raphael(function () {
     selectline(lines[0]);
     selectline(lines[1]);
 
-	//var dummy = r.path("M0 0");
-	//lines.attr({"stroke": "#00f", "stroke-width": "5px"});
 	lines.attr({"class": "selectable"});
 
 	selectedlines.attr({"class": "selected"});
 
-//	dummy.animate(animfwd);
-//	lines.animateWith(dummy, animfwd, animfwd);
-
-	//var circle = r.circle(50, 40, 10);
-	//// Sets the fill attribute of the circle to red (#f00)
-	//circle.attr("fill", "#f00");
-
-	//// Sets the stroke attribute of the circle to white
-	//circle.attr("stroke", "#fff");
 });
 
