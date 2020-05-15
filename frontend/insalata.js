@@ -131,21 +131,7 @@ Raphael(function () {
     }
 
 
-    var _state = {
-        _id: 1,
-        shortcode: "",
-        board: {},
-        in_progress: true,
-        time_started: new Date(),
-        time_ended: null,
-        move_timeout: 30000,
-        num_events: 0,
-        num_players: 1,
-        players: [
-            { name: "you", score: 0, auth_cookie_id: 0, moves: [] },
-        ],
-        plays: [],
-    };
+    var _state;
 
     var _display = {
         cellSize: 25,
@@ -157,59 +143,8 @@ Raphael(function () {
     _display.w = Math.sqrt(3) * _display.cellSize;
     _display.h = 2 * _display.cellSize;
 
-    function randomColor(board) {
-        var colors = Object.keys(board.colors);
-        return colors[Math.floor(Math.random()*colors.length)];
-    }
-    function randomColorOrWild(board) {
-        var colorsOrWild = Object.keys(board.colors);
-        colorsOrWild.push("wild");
-        return colorsOrWild[Math.floor(Math.random()*colorsOrWild.length)];
-    }
-
-    function generateRandomPlay(state) {
-        state.plays.push( [ randomColorOrWild(state.board), randomColorOrWild(state.board) ] );
-    }
-
     function getCurrentColors(state) {
         return state.plays[state.plays.length - 1];
-    }
-
-    function generateRandomBoard(display, board) {
-        var topLeft = { x: display.cellSize, y: display.cellSize };
-        var numCells = { x: 10, y: 10 };
-        for (var row = 0; row < numCells.y; row++) {
-            for (var col = 0; col < numCells.x; col++) {
-                board.cells.push({ x: topLeft.x + col*display.w + (row%2?display.w/2:0), y: topLeft.y + row*display.h*3/4, color: randomColor(board)});
-                if (col > 0) {
-                    board.edges.push([board.cells.length-1, board.cells.length-1 - 1]);
-                }
-                if (row > 0) {
-                    board.edges.push([board.cells.length-1, board.cells.length-1 - numCells.x]);
-                    if (row%2) {
-                        if (col < numCells.x - 1) {
-                            board.edges.push([board.cells.length-1, board.cells.length-1 - numCells.x + 1]);
-                        }
-                    } else {
-                        if (col > 0) {
-                            board.edges.push([board.cells.length-1, board.cells.length-1 - numCells.x - 1]);
-                        }
-                    }
-                }
-            }
-        }
-
-	// Hardcoded icons and shops, TODO: change later
-	board.cells[0].contents = "shopA";
-	board.cells[17].contents = "shopB";
-	board.cells[29].contents = "shopC";
-	board.cells[32].contents = "shopD";
-	board.cells[48].contents = "shopE";
-	board.cells[50].contents = "tomato";
-	board.cells[10].contents = "lettuce";
-	board.cells[33].contents = "bowl";
-	board.cells[27].contents = "dressing";
-	board.cells[12].contents = "cucumber";
     }
 
     function makeSelected(display, state) {
@@ -343,9 +278,6 @@ Raphael(function () {
 				r.text(cell.x, cell.y, text);
 			}
 	    }
-        //r.image("../assets/tomato.png", state.board.cells[10].x, state.board.cells[10].y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
-        //r.image("../assets/lettuce.png", 15+display.w, 15, 20, 20);
-        //r.image("../assets/tomato.png", 15+display.w, 15+1.5*display.h, 20, 20);
     }
 
 });
