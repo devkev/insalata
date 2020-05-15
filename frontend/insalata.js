@@ -198,7 +198,14 @@ Raphael(function () {
                 }
             }
         }
-	board.cells[0].contents = "tomato";
+
+	// Hardcoded icons and shops, TODO: change later
+	board.cells[0].contents = "shopA";
+	board.cells[17].contents = "shopB";
+	board.cells[29].contents = "shopC";
+	board.cells[32].contents = "shopD";
+	board.cells[48].contents = "shopE";
+	board.cells[50].contents = "tomato";
 	board.cells[10].contents = "lettuce";
 	board.cells[33].contents = "bowl";
 	board.cells[27].contents = "dressing";
@@ -310,10 +317,35 @@ Raphael(function () {
 				r.image("../assets/"+fileName, cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
 			}
 	    }
+
+        // draw the stores
+        for (var cell of state.board.cells) {
+			var text = "";
+			switch(cell.contents) {
+				case 'shopA':
+					text = "A"
+					break;
+				case 'shopB':
+					text = "B"
+					break;
+				case 'shopC':
+					text = "C"
+					break;
+				case 'shopD':
+					text = "D"
+					break;
+				case 'shopE':
+					text = "E"
+					break;
+			}
+			if (text != "") {
+				r.image("../assets/shop1.png", cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize-5)
+				r.text(cell.x, cell.y, text);
+			}
+	    }
         //r.image("../assets/tomato.png", state.board.cells[10].x, state.board.cells[10].y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
         //r.image("../assets/lettuce.png", 15+display.w, 15, 20, 20);
         //r.image("../assets/tomato.png", 15+display.w, 15+1.5*display.h, 20, 20);
     }
 
 });
-
