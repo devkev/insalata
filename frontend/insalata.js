@@ -151,6 +151,11 @@ Raphael(function () {
                 }
             }
         }
+	board.cells[0].contents = "tomato";
+	board.cells[10].contents = "lettuce";
+	board.cells[33].contents = "bowl";
+	board.cells[27].contents = "dressing";
+	board.cells[12].contents = "cucumber";
     }
     generateRandomBoard(_display, _board);
     _state.board = _board;
@@ -225,9 +230,33 @@ Raphael(function () {
         }
 
         // draw the icons
-        r.image("../assets/lettuce.png", 15, 15, 20, 20);
-        r.image("../assets/lettuce.png", 15+display.w, 15, 20, 20);
-        r.image("../assets/tomato.png", 15+display.w, 15+1.5*display.h, 20, 20);
+		var iconSize = 25;
+        for (var cell of state.board.cells) {
+			var fileName="";
+			switch(cell.contents) {
+				case 'lettuce':
+					fileName = "lettuce.png"
+					break;
+				case 'tomato':
+					fileName = "tomato.png"
+					break;
+				case 'cucumber':
+					fileName = "cucumber.png"
+					break;
+				case 'bowl':
+					fileName = "bowl.png"
+					break;
+				case 'dressing':
+					fileName = "dressing.png"
+					break;
+			}
+			if (fileName != "") {
+				r.image("../assets/"+fileName, cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
+			}
+	    }
+        //r.image("../assets/tomato.png", state.board.cells[10].x, state.board.cells[10].y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
+        //r.image("../assets/lettuce.png", 15+display.w, 15, 20, 20);
+        //r.image("../assets/tomato.png", 15+display.w, 15+1.5*display.h, 20, 20);
     }
 
     populateDisplay(_display, _state);

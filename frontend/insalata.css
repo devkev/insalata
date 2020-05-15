@@ -36,6 +36,8 @@ body {
 .cell.blue {
 	fill: #00f4;
 }
+.cell.icon {
+}
 
 .selected {
 	stroke: #000;
