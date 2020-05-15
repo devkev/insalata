@@ -1,107 +1,24 @@
-function NGon(x, y, N, side) {
-    // draw a dot at the center point for visual reference
-    //paper.circle(x, y, 3).attr("fill", "black");
-
-    var path = "", n, temp_x, temp_y, angle;
-
-    for (n = 0; n <= N; n += 1) {
-        // the angle (in radians) as an nth fraction of the whole circle
-        angle = n / N * 2 * Math.PI;
-
-        // The starting x value of the point adjusted by the angle
-        temp_x = x + Math.sin(angle) * side;
-        // The starting y value of the point adjusted by the angle
-        temp_y = y + Math.cos(angle) * side;
-
-        // Start with "M" if it's the first point, otherwise L
-        path += (n === 0 ? "M" : "L") + temp_x + "," + temp_y;
-    }
-    return path;
-}
 Raphael(function () {
-    //var img = document.getElementById("bg");
-    //img.style.display = "none";
 
-	var selectLineSound = new Howl({
-	  src: ['399934_1676145-lq.mp3']
-	});
+    function makePolygonPath(x, y, N, side) {
+        // draw a dot at the center point for visual reference
+        //paper.circle(x, y, 3).attr("fill", "black");
 
-	var hoverLineSound = new Howl({
-	  src: ['338229_3972805-lq.mp3']
-	});
+        var path = "", n, temp_x, temp_y, angle;
 
-    var r = Raphael("holder", 640, 480);
+        for (n = 0; n <= N; n += 1) {
+            // the angle (in radians) as an nth fraction of the whole circle
+            angle = n / N * 2 * Math.PI;
 
-	// draw the bg
-    //r.image(img.src, 0, 0, 640, 480);
+            // The starting x value of the point adjusted by the angle
+            temp_x = x + Math.sin(angle) * side;
+            // The starting y value of the point adjusted by the angle
+            temp_y = y + Math.cos(angle) * side;
 
-	//var animdur = 1000;
-	//var animdur = 500;
-	var animdur = 750;
-
-	//var animeasing = "ease-in-out";
-	var animeasing = "linear";
-
-    var colors = [ "red", "green", "blue" ];
-    var colorsOrWild = Array.from(colors);
-    colorsOrWild.push("wild");
-
-    function randomColor() {
-        return colors[Math.floor(Math.random()*colors.length)];
-    }
-    function randomColorOrWild() {
-        return colorsOrWild[Math.floor(Math.random()*colorsOrWild.length)];
-    }
-
-    var color1;
-    var color2;
-
-    function chooseColors() {
-        //color1 = "green";
-        //color2 = "blue";
-        //color1 = randomColor();
-        //color2 = randomColor();
-        color1 = randomColorOrWild();
-        color2 = randomColorOrWild();
-    }
-
-    var cellSize = 25;
-    var w = Math.sqrt(3) * cellSize;
-    var h = 2 * cellSize;
-    var topLeft = { x: cellSize, y: cellSize };
-    var numCells = { x: 10, y: 10 };
-    var cells = [];
-    var edges = [];
-    for (var row = 0; row < numCells.y; row++) {
-        for (var col = 0; col < numCells.x; col++) {
-            cells.push({ x: topLeft.x + col*w + (row%2?w/2:0), y: topLeft.y + row*h*3/4, color: randomColor()});
-            if (col > 0) {
-                edges.push([cells.length-1, cells.length-1 - 1]);
-            }
-            if (row > 0) {
-                edges.push([cells.length-1, cells.length-1 - numCells.x]);
-                if (row%2) {
-                    if (col < numCells.x - 1) {
-                        edges.push([cells.length-1, cells.length-1 - numCells.x + 1]);
-                    }
-                } else {
-                    if (col > 0) {
-                        edges.push([cells.length-1, cells.length-1 - numCells.x - 1]);
-                    }
-                }
-            }
+            // Start with "M" if it's the first point, otherwise L
+            path += (n === 0 ? "M" : "L") + temp_x + "," + temp_y;
         }
-    }
-
-	// draw the icons
-    r.image("../assets/lettuce.png", 15, 15, 20, 20);
-    r.image("../assets/lettuce.png", 15+w, 15, 20, 20);
-    r.image("../assets/tomato.png", 15+w, 15+1.5*h, 20, 20);
-
-
-
-    for (var cell of cells) {
-        r.path(NGon(cell.x, cell.y, 6, 25)).attr({"class": "cell " + cell.color});
+        return path;
     }
 
     function _getClasses(node) {
@@ -143,7 +60,105 @@ Raphael(function () {
     }
 
 
-    function makeselectable() {
+    /////////////////////////////////////////////////////////////////
+
+    //var img = document.getElementById("bg");
+    //img.style.display = "none";
+
+    var r = Raphael("holder", 640, 480);
+
+	// draw the bg
+    //r.image(img.src, 0, 0, 640, 480);
+
+
+    var _board = {
+        _id: 1,
+        name: "test",
+        numRounds: 2,
+        colors: {
+            red: "#f00",
+            green: "#f00",
+            blue: "#f00",
+        },
+        cells: [],
+        edges: [],
+    };
+
+    var _state = {
+        _id: 1,
+        shortcode: "",
+        board: {},
+        in_progress: true,
+        time_started: new Date(),
+        time_ended: null,
+        move_timeout: 30000,
+        num_events: 0,
+        num_players: 1,
+        players: [
+            { name: "you", score: 0, auth_cookie_id: 0, moves: [] },
+        ],
+        plays: [],
+    };
+
+    var _display = {
+        cellSize: 25,
+        cells: r.set(),
+        edges: r.set(),
+        selectLineSound: new Howl({ src: ['399934_1676145-lq.mp3'] }),
+        hoverLineSound: new Howl({ src: ['338229_3972805-lq.mp3'] }),
+    };
+    _display.w = Math.sqrt(3) * _display.cellSize;
+    _display.h = 2 * _display.cellSize;
+
+    function randomColor(board) {
+        var colors = Object.keys(board.colors);
+        return colors[Math.floor(Math.random()*colors.length)];
+    }
+    function randomColorOrWild(board) {
+        var colorsOrWild = Object.keys(board.colors);
+        colorsOrWild.push("wild");
+        return colorsOrWild[Math.floor(Math.random()*colorsOrWild.length)];
+    }
+
+    function generateRandomPlay(state) {
+        state.plays.push( [ randomColorOrWild(state.board), randomColorOrWild(state.board) ] );
+    }
+
+    function getCurrentColors(state) {
+        return state.plays[state.plays.length - 1];
+    }
+
+    function generateRandomBoard(display, board) {
+        var topLeft = { x: display.cellSize, y: display.cellSize };
+        var numCells = { x: 10, y: 10 };
+        for (var row = 0; row < numCells.y; row++) {
+            for (var col = 0; col < numCells.x; col++) {
+                board.cells.push({ x: topLeft.x + col*display.w + (row%2?display.w/2:0), y: topLeft.y + row*display.h*3/4, color: randomColor(board)});
+                if (col > 0) {
+                    board.edges.push([board.cells.length-1, board.cells.length-1 - 1]);
+                }
+                if (row > 0) {
+                    board.edges.push([board.cells.length-1, board.cells.length-1 - numCells.x]);
+                    if (row%2) {
+                        if (col < numCells.x - 1) {
+                            board.edges.push([board.cells.length-1, board.cells.length-1 - numCells.x + 1]);
+                        }
+                    } else {
+                        if (col > 0) {
+                            board.edges.push([board.cells.length-1, board.cells.length-1 - numCells.x - 1]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    generateRandomBoard(_display, _board);
+    _state.board = _board;
+
+    function makeSelectable(display, state) {
+        var currentColors = getCurrentColors(state);
+        var color1 = currentColors[0];
+        var color2 = currentColors[1];
         var query = ".unselected";
         if (color1 === "wild" && color2 === "wild") {
             // nothing, all edges are good
@@ -159,63 +174,66 @@ Raphael(function () {
         }
     }
 
-	function selectline(line) {
+	function selectLine(line) {
         swapClass(line, "selectable", "selected");
     }
 
-	function finishselecting() {
+	function finishSelecting() {
         var selectables = document.getElementsByClassName("selectable");
         while (selectables.length > 0) {
             swapClass(selectables[0], "selectable", "unselected");
         }
     }
 
-	function makeline(edge) {
-		var line = r.path("M" + cells[edge[0]].x + " " + cells[edge[0]].y +
-                          "L" + cells[edge[1]].x + " " + cells[edge[1]].y);
+	function makeline(board, edge) {
+		var line = r.path("M" + board.cells[edge[0]].x + " " + board.cells[edge[0]].y +
+                          "L" + board.cells[edge[1]].x + " " + board.cells[edge[1]].y);
         var className = "unselected";
-        className += " " + cells[edge[0]].color + "-" + cells[edge[1]].color;
-        className += " " + cells[edge[0]].color;
-        if (cells[edge[1]].color !== cells[edge[0]].color ) {
-            className += " " + cells[edge[1]].color + "-" + cells[edge[0]].color;
-            className += " " + cells[edge[1]].color;
+        className += " " + board.cells[edge[0]].color + "-" + board.cells[edge[1]].color;
+        className += " " + board.cells[edge[0]].color;
+        if (board.cells[edge[1]].color !== board.cells[edge[0]].color ) {
+            className += " " + board.cells[edge[1]].color + "-" + board.cells[edge[0]].color;
+            className += " " + board.cells[edge[1]].color;
         }
         line.attr("class", className);
 		line.hover(function() {
 			if (hasClass(line.node, "selectable")) {
-				hoverLineSound.play();
+				_display.hoverLineSound.play();
 			}
 		}).click(function() {
 			if (hasClass(line.node, "selectable")) {
-                console.log("click");
-				selectLineSound.play();
-                selectline(line.node);
-                finishselecting();
+				_display.selectLineSound.play();
+                selectLine(line.node);
+                finishSelecting();
 
 				setTimeout(function () {
-                    chooseColors();
-                    makeselectable();
+                    generateRandomPlay(_state);
+                    makeSelectable(_display, _state);
 				}, 1000);
-			} else {
-				//lines.attr({"class": "selectable"});
 			}
 		});
 		return line;
 	}
 
-	var lines = r.set();
-    for (var edge of edges) {
-        lines.push(makeline(edge));
+    function populateDisplay(display, state) {
+        for (var cell of state.board.cells) {
+            display.cells.push(r.path(makePolygonPath(cell.x, cell.y, 6, 25)).attr({"class": "cell " + cell.color}));
+        }
+
+        for (var edge of state.board.edges) {
+            display.edges.push(makeline(state.board, edge));
+        }
+
+        // draw the icons
+        r.image("../assets/lettuce.png", 15, 15, 20, 20);
+        r.image("../assets/lettuce.png", 15+display.w, 15, 20, 20);
+        r.image("../assets/tomato.png", 15+display.w, 15+1.5*display.h, 20, 20);
     }
 
-    chooseColors();
-    makeselectable();
+    populateDisplay(_display, _state);
 
-    selectline(lines[numCells.x-1].node);
-    selectline(lines[numCells.x-1].node);
-    selectline(lines[0].node);
-    selectline(lines[0].node);
-    selectline(lines[1].node);
+    generateRandomPlay(_state);
+    makeSelectable(_display, _state);
 
 });
 
