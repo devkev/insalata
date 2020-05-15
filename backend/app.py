@@ -25,7 +25,7 @@ board_json = '''{
       "x": 25,
       "y": 25,
       "color": "red",
-      "contents": "tomato"
+      "contents": "shopA"
     },
     {
       "x": 68.30127018922192,
@@ -112,7 +112,8 @@ board_json = '''{
     {
       "x": 349.75952641916444,
       "y": 62.5,
-      "color": "red"
+      "color": "red",
+      "contents": "shopB"
     },
     {
       "x": 393.0607966083864,
@@ -173,7 +174,8 @@ board_json = '''{
     {
       "x": 414.7114317029974,
       "y": 100,
-      "color": "red"
+      "color": "red",
+      "contents": "shopC"
     },
     {
       "x": 46.65063509461096,
@@ -188,7 +190,8 @@ board_json = '''{
     {
       "x": 133.25317547305482,
       "y": 137.5,
-      "color": "blue"
+      "color": "blue",
+      "contents": "shopD"
     },
     {
       "x": 176.55444566227678,
@@ -269,7 +272,8 @@ board_json = '''{
     {
       "x": 371.41016151377545,
       "y": 175,
-      "color": "red"
+      "color": "red",
+      "contents": "shopE"
     },
     {
       "x": 414.7114317029974,
@@ -279,7 +283,8 @@ board_json = '''{
     {
       "x": 46.65063509461096,
       "y": 212.5,
-      "color": "blue"
+      "color": "blue",
+      "contents": "tomato"
     },
     {
       "x": 89.95190528383289,
