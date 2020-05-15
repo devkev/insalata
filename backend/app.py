@@ -1797,3 +1797,5 @@ def app():
 
 if __name__ == '__main__':
     aiohttp.web.run_app(app(), host=HOST, port=PORT)
+
+# vim: et ts=4 si ai

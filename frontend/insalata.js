@@ -67,7 +67,7 @@ Raphael(function () {
 
     var r = Raphael("holder", 640, 480);
 
-	// draw the bg
+    // draw the bg
     //r.image(img.src, 0, 0, 640, 480);
 
     var scheme = "ws";
@@ -244,10 +244,10 @@ Raphael(function () {
             swapClass(unselected, "unselected", "selectable");
         }
 
-	updateColors(state);
+    updateColors(state);
     }
 
-	function finishSelecting() {
+    function finishSelecting() {
         var selectables = document.getElementsByClassName("selectable");
         while (selectables.length > 0) {
             swapClass(selectables[0], "selectable", "unselected");
@@ -315,59 +315,62 @@ Raphael(function () {
         }
 
         // draw the icons
-		var iconSize = 25;
+        var iconSize = 25;
         for (var cell of state.board.cells) {
-			var fileName="";
-			switch(cell.contents) {
-				case 'lettuce':
-					fileName = "lettuce.png"
-					break;
-				case 'tomato':
-					fileName = "tomato.png"
-					break;
-				case 'cucumber':
-					fileName = "cucumber.png"
-					break;
-				case 'bowl':
-					fileName = "bowl.png"
-					break;
-				case 'dressing':
-					fileName = "dressing.png"
-					break;
-			}
-			if (fileName != "") {
-				display.icons[cell.num] = r.image("../assets/"+fileName, cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
-			}
-	    }
+            var fileName="";
+            switch(cell.contents) {
+                case 'lettuce':
+                    fileName = "lettuce.png"
+                    break;
+                case 'tomato':
+                    fileName = "tomato.png"
+                    break;
+                case 'cucumber':
+                    fileName = "cucumber.png"
+                    break;
+                case 'bowl':
+                    fileName = "bowl.png"
+                    break;
+                case 'dressing':
+                    fileName = "dressing.png"
+                    break;
+            }
+            if (fileName != "") {
+                display.icons[cell.num] = r.image("../assets/"+fileName, cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
+            }
+        }
 
         // draw the stores
         for (var cell of state.board.cells) {
-			var text = "";
-			switch(cell.contents) {
-				case 'shopA':
-					text = "A"
-					break;
-				case 'shopB':
-					text = "B"
-					break;
-				case 'shopC':
-					text = "C"
-					break;
-				case 'shopD':
-					text = "D"
-					break;
-				case 'shopE':
-					text = "E"
-					break;
-			}
-			if (text != "") {
+            var text = "";
+            switch(cell.contents) {
+                case 'shopA':
+                    text = "A"
+                    break;
+                case 'shopB':
+                    text = "B"
+                    break;
+                case 'shopC':
+                    text = "C"
+                    break;
+                case 'shopD':
+                    text = "D"
+                    break;
+                case 'shopE':
+                    text = "E"
+                    break;
+            }
+            if (text != "") {
                 display.icons[cell.num] = r.set();
-				display.icons[cell.num].push(r.image("../assets/shop1.png", cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize-5));
-				display.icons[cell.num].push(r.text(cell.x, cell.y, text));
-			}
-	    }
+                display.icons[cell.num].push(r.image("../assets/shop1.png", cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize-5));
+                display.icons[cell.num].push(r.text(cell.x, cell.y, text));
+            }
+        }
 
         display.edgesInteract.toFront();
     }
 
 });
+/*
+vim: et ts=4 si ai
+*/

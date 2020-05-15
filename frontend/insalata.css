@@ -24,46 +24,46 @@ body {
 
 .unselected {
 /*
-	stroke: #000;
-	stroke-width: 2px;
-	opacity: 25%;
+    stroke: #000;
+    stroke-width: 2px;
+    opacity: 25%;
 */
-	stroke: #000;
-	stroke-width: 0px;
-	/*opacity: 0%;*/
+    stroke: #000;
+    stroke-width: 0px;
+    /*opacity: 0%;*/
 }
 
 .cell {
-	stroke: #000;
-	stroke-width: 2px;
+    stroke: #000;
+    stroke-width: 2px;
 }
 .cell.icon {
 }
 
 .selected.interact {
-	stroke: #0000;
-	stroke-width: 0px;
+    stroke: #0000;
+    stroke-width: 0px;
 }
 
 .selected:not(.interact) {
-	stroke: #000;
-	stroke-width: 5px;
+    stroke: #000;
+    stroke-width: 5px;
 }
 
 .selectable.interact {
-	stroke: #0000;
-	stroke-width: 10px;
+    stroke: #0000;
+    stroke-width: 10px;
 }
 
 .selectable:not(.interact) {
-	stroke: #00f;
-	stroke-width: 4px;
-	animation-duration: 1s;
-	animation-name: colorbounce;
-	animation-iteration-count: infinite;
-	animation-direction: alternate;
-	animation-timing-function: ease-in-out;
-	/*animation-play-state: running, paused;*/
+    stroke: #00f;
+    stroke-width: 4px;
+    animation-duration: 1s;
+    animation-name: colorbounce;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-timing-function: ease-in-out;
+    /*animation-play-state: running, paused;*/
 }
 @keyframes colorbounce {
   from {
@@ -76,22 +76,22 @@ body {
 }
 /*
 .selectable:hover {
-	stroke: #fff;
-	stroke-width: 5px;
-	animation-name: unset;
+    stroke: #fff;
+    stroke-width: 5px;
+    animation-name: unset;
 }
 */
 .selectable:not(.interact).hover {
 /*
-	animation-name: colorbouncehover;
-	animation-play-state: paused, running;
+    animation-name: colorbouncehover;
+    animation-play-state: paused, running;
 */
-	stroke-width: 6px;
-	animation-duration: 1s, 0.5s;
-	animation-name: colorbounce, colorbouncehover;
-	animation-iteration-count: infinite;
-	animation-timing-function: ease-in-out, linear;
-	animation-direction: alternate, normal;
+    stroke-width: 6px;
+    animation-duration: 1s, 0.5s;
+    animation-name: colorbounce, colorbouncehover;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out, linear;
+    animation-direction: alternate, normal;
 }
 @keyframes colorbouncehover {
   from {
@@ -110,4 +110,6 @@ body {
     stroke: #070;
   }
 }
-
+/*
+vim: et ts=4 si ai
+*/
