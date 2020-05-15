@@ -20,6 +20,14 @@ board_json = '''{
     "green": "#f00",
     "blue": "#f00"
   },
+  "shops": [ "shopA", "shopB", "shopC", "shopD", "shopE" ],
+  "targets": {
+    "bowl": [ 1, 2 ],
+    "lettuce": [ 2, 2 ],
+    "tomato": [ 2, 3 ],
+    "cucumber": [ 3, 4 ],
+    "dressing": [ 4, 5 ]
+  },
   "cells": [
     {
       "x": 25,
@@ -1593,7 +1601,12 @@ initial_state_json = '''{
   "players": [
     {
       "name": "you",
-      "score": 0,
+      "score": {
+          "targets_current_round": 0,
+          "targets_previous_rounds": [],
+          "shops_joined": [],
+          "bonuses": []
+      },
       "auth_cookie_id": 0,
       "moves": []
     }
@@ -1643,7 +1656,7 @@ async def websocket_handler(request):
                 elif inmsg["type"] == "doMove":
                     edgeIndex = int(inmsg["move"])
                     state["players"][0]["moves"].append(edgeIndex)
-                    state["players"][0]["score"] = state["players"][0]["score"] + 1
+                    state["players"][0]["score"]["targets_current_round"] = state["players"][0]["score"]["targets_current_round"] + 1
                     generateRandomPlay(state)
                     response = { "error": False, "type": "newPlay", "state": state }
 

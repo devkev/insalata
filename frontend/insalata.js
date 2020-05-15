@@ -101,7 +101,7 @@ Raphael(function () {
 
             populateDisplay(_display, _state);
 
-            document.getElementById("score").innerHTML = _state.players[0].score;
+            updateScores(_state);
 
             makeSelected(_display, _state);
             makeSelectable(_display, _state);
@@ -109,7 +109,7 @@ Raphael(function () {
         } else if (inmsg.type === "newPlay") {
             _state = inmsg.state;
 
-            document.getElementById("score").innerHTML = _state.players[0].score;
+            updateScores(_state);
 
             makeSelected(_display, _state);
             makeSelectable(_display, _state);
@@ -146,6 +146,28 @@ Raphael(function () {
     };
     _display.w = Math.sqrt(3) * _display.cellSize;
     _display.h = 2 * _display.cellSize;
+
+    function sumScore(playerScore) {
+        if (Array.isArray(playerScore)) {
+            var total = 0;
+            for (var subScore of playerScore) {
+                total += sumScore(subScore);
+            }
+            return total;
+        } else if (typeof(playerScore) === "object") {
+            var total = 0;
+            for (var subScoreKey of Object.keys(playerScore)) {
+                total += sumScore(playerScore[subScoreKey]);
+            }
+            return total;
+        } else {
+            return playerScore;
+        }
+    }
+
+    function updateScores(state) {
+        document.getElementById("score").innerHTML = sumScore(state.players[0].score);
+    }
 
     function getCurrentColors(state) {
         return state.plays[state.plays.length - 1];
