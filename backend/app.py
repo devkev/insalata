@@ -3,6 +3,7 @@
 import asyncio
 import json
 import random
+import copy
 import os
 
 import aiohttp.web
@@ -20,8 +21,8 @@ board_json = '''{
     "green": "#f00",
     "blue": "#f00"
   },
-  "shops": [ "shopA", "shopB", "shopC", "shopD", "shopE" ],
-  "targets": {
+  "shopNames": [ "shopA", "shopB", "shopC", "shopD", "shopE" ],
+  "targetsPoints": {
     "bowl": [ 1, 2 ],
     "lettuce": [ 2, 2 ],
     "tomato": [ 2, 3 ],
@@ -53,7 +54,8 @@ board_json = '''{
     {
       "x": 198.20508075688772,
       "y": 25,
-      "color": "red"
+      "color": "red",
+      "contents": "shopE"
     },
     {
       "x": 241.50635094610965,
@@ -161,7 +163,8 @@ board_json = '''{
     {
       "x": 241.50635094610965,
       "y": 100,
-      "color": "blue"
+      "color": "blue",
+      "contents": "shopD"
     },
     {
       "x": 284.8076211353316,
@@ -367,7 +370,8 @@ board_json = '''{
     {
       "x": 241.50635094610965,
       "y": 250,
-      "color": "green"
+      "color": "green",
+      "contents": "shopA"
     },
     {
       "x": 284.8076211353316,
@@ -402,7 +406,8 @@ board_json = '''{
     {
       "x": 133.25317547305482,
       "y": 287.5,
-      "color": "green"
+      "color": "green",
+      "contents": "shopB"
     },
     {
       "x": 176.55444566227678,
@@ -472,7 +477,8 @@ board_json = '''{
     {
       "x": 284.8076211353316,
       "y": 325,
-      "color": "red"
+      "color": "red",
+      "contents": "shopC"
     },
     {
       "x": 328.1088913245535,
@@ -1608,7 +1614,11 @@ initial_state_json = '''{
           "bonuses": []
       },
       "auth_cookie_id": 0,
-      "moves": []
+      "moves": [],
+      "cells_connected_to_shops": {},
+      "targets_connected_to_shops": {},
+      "connected_targets": {},
+      "connected_shops": {}
     }
   ],
   "plays": []
@@ -1616,6 +1626,42 @@ initial_state_json = '''{
 
 state = json.loads(initial_state_json)
 state["board"] = board
+
+for i in range(len(state["board"]["cells"])):
+    state["board"]["cells"][i]["num"] = i
+
+for cell in state["board"]["cells"]:
+    cell["connected_cells"] = {}
+
+for edge in state["board"]["edges"]:
+    state["board"]["cells"][edge[0]]["connected_cells"][edge[1]] = True
+    state["board"]["cells"][edge[1]]["connected_cells"][edge[0]] = True
+
+state["board"]["shops"] = {}
+for shopName in state["board"]["shopNames"]:
+    state["board"]["shops"][shopName] = []
+
+state["board"]["all_shops"] = []
+for cell in state["board"]["cells"]:
+    if "contents" in cell:
+        for shopName in state["board"]["shopNames"]:
+            if cell["contents"] == shopName:
+                state["board"]["all_shops"].append(cell["num"])
+                state["board"]["shops"][shopName].append(cell["num"])
+
+state["board"]["targets"] = {}
+for targetName in state["board"]["targetsPoints"].keys():
+    state["board"]["targets"][targetName] = []
+
+state["board"]["all_targets"] = []
+for cell in state["board"]["cells"]:
+    if "contents" in cell:
+        for targetName in state["board"]["targetsPoints"].keys():
+            if cell["contents"] == targetName:
+                state["board"]["all_targets"].append(cell["num"])
+                state["board"]["targets"][targetName].append(cell["num"])
+
+
 
 def randomColorOrWild(board):
     colorsOrWild = list(board["colors"].keys()).copy()
@@ -1626,6 +1672,67 @@ def generateRandomPlay(state):
     state["plays"].append( [ randomColorOrWild(state["board"]), randomColorOrWild(state["board"]) ] )
 
 generateRandomPlay(state)
+
+
+def computeConnectedToCell(cell, connected_cells, playerState):
+    #print("computing connected to cell", cell)
+    seen = {}
+    queue = [cell]
+    while len(queue) > 0:
+        current = queue[0]
+        queue = queue[1:]
+        #print("current:", current, ", queue:", queue, ", seen: ", seen)
+        if current not in seen:
+            seen[current] = True
+            for connected in connected_cells[current].keys():
+                if connected not in seen:
+                    queue.append(connected)
+    del seen[cell]
+    return seen
+
+
+
+def computeConnectedsForPlayer(board, playerState):
+    player_cell_connections = []
+    for cell in board["cells"]:
+        player_cell_connections.append({})
+    for edgeIndex in playerState["moves"]:
+        edge = board["edges"][edgeIndex]
+        player_cell_connections[edge[0]][edge[1]] = True
+        player_cell_connections[edge[1]][edge[0]] = True
+
+    shops = board["shops"]
+    for shopName in shops.keys():
+        for shop in shops[shopName]:
+            playerState["cells_connected_to_shops"][shopName] = computeConnectedToCell(shop, player_cell_connections, playerState["moves"])
+            for connected_cell in playerState["cells_connected_to_shops"][shopName]:
+                if connected_cell in shops[shopName]:
+                    playerState["connected_shops"][connected_cell] = True
+                for targetName in board["targets"].keys():
+                    if connected_cell in board["targets"][targetName]:
+                        playerState["connected_targets"][connected_cell] = True
+                        if shopName not in playerState["targets_connected_to_shops"]:
+                            playerState["targets_connected_to_shops"][shopName] = {}
+                        playerState["targets_connected_to_shops"][shopName][connected_cell] = True
+
+def updatePlayerScore(prevPlayerState, playerState):
+    if len(playerState["connected_shops"].keys()) > len(prevPlayerState["connected_shops"].keys()):
+        # newly connected shops
+        playerState["score"]["shops_joined"].append(5)
+
+    if len(playerState["connected_targets"].keys()) > len(prevPlayerState["connected_targets"].keys()):
+        # newly connected targets
+        playerState["score"]["targets_current_round"] = state["players"][0]["score"]["targets_current_round"] + 1
+
+
+
+# maybe this isn't ever needed...?
+def computeConnecteds(state):
+    for player in state["players"]:
+        prevPlayerState = copy.deepcopy(player)
+        computeConnectedsForPlayer(state["board"], player)
+        updatePlayerScore(prevPlayerState, player)
+
 
 
 #async def testhandle(request):
@@ -1654,10 +1761,17 @@ async def websocket_handler(request):
                     response = { "error": False, "type": "joinedGame", "state": state }
 
                 elif inmsg["type"] == "doMove":
+                    # FIXME: figure out the player from the auth token
+                    player = state["players"][0]
+
+                    prevPlayerState = copy.deepcopy(player)
                     edgeIndex = int(inmsg["move"])
-                    state["players"][0]["moves"].append(edgeIndex)
-                    state["players"][0]["score"]["targets_current_round"] = state["players"][0]["score"]["targets_current_round"] + 1
+                    player["moves"].append(edgeIndex)
+                    computeConnectedsForPlayer(state["board"], player)
+                    updatePlayerScore(prevPlayerState, player)
+
                     generateRandomPlay(state)
+
                     response = { "error": False, "type": "newPlay", "state": state }
 
                 else:
