@@ -81,9 +81,23 @@ Raphael(function () {
         document.getElementById("errorbanner").append("ERROR: Unable to connect to server, try reloading");
     };
 
+    function getGameShortCode() {
+        var match;
+        if (match = document.location.pathname.match(/^\/g\/(.*)$/)) {
+            return match[1];
+        }
+    }
+
     ws.onopen = function (event) {
         console.log("connected");
-        joinGame({ gameShortCode: "", playerName: "you" });
+        var match;
+        if (document.location.pathname === '/') {
+            // need to create a game
+            createGame({/*board_id*/});
+            // on successful response from this, redirect
+        } else if (gameShortCode = getGameShortCode()) {
+            joinGame({ gameShortCode, playerName: "you" });
+        }
     };
 
     ws.onmessage = function (event) {
@@ -96,7 +110,15 @@ Raphael(function () {
         }
 
         console.log("received", inmsg);
-        if (inmsg.type === "joinedGame") {
+        if (inmsg.type === "createdGame") {
+            var newurl = window.location.href;
+            if (newurl[newurl.length - 1] !== '/') {
+                newurl += "/";
+            }
+            newurl += "g/" + inmsg.state.shortcode;
+            window.location.href = newurl;
+
+        } else if (inmsg.type === "joinedGame") {
             updateState(inmsg.state);
 
             populateDisplay(_display, _state);
@@ -128,12 +150,18 @@ Raphael(function () {
         ws.send(JSON.stringify(msg));
     }
 
+    function createGame({boardId}) {
+        // FIXME: board_id
+        sendMessage("createGame");
+    }
+
     function joinGame({gameShortCode, playerName}) {
         sendMessage("joinGame", { gameShortCode, playerName });
     }
 
     function sendMove({edgeIndex}) {
-        sendMessage("doMove", { gameid: 1, move: edgeIndex });
+        gameShortCode = getGameShortCode();
+        sendMessage("doMove", { gameShortCode, move: edgeIndex });
     }
 
 
@@ -147,9 +175,9 @@ Raphael(function () {
         icons: {},
         glows: {},
         sound: {
-            selectLine: new Howl({ src: ['399934_1676145-lq.mp3'] }),
-            hoverLine: new Howl({ src: ['338229_3972805-lq.mp3'] }),
-            increaseScore: new Howl({ src: ['51715_113976-lq.mp3'] }),
+            selectLine: new Howl({ src: ['/assets/399934_1676145-lq.mp3'] }),
+            hoverLine: new Howl({ src: ['/assets/338229_3972805-lq.mp3'] }),
+            increaseScore: new Howl({ src: ['/assets/51715_113976-lq.mp3'] }),
         },
     };
     _display.w = Math.sqrt(3) * _display.cellSize;
@@ -243,7 +271,7 @@ Raphael(function () {
             swapClass(unselected, "unselected", "selectable");
         }
 
-    updateColors(state);
+        updateColors(state);
     }
 
     function finishSelecting() {
@@ -335,8 +363,8 @@ Raphael(function () {
                     break;
             }
             if (fileName != "") {
-                display.glows[cell.num] = r.image("../assets/starburst.png", cell.x, cell.y, iconSize*1.8, iconSize*1.8).attr("class", "cell icon glow").translate(-iconSize*0.9, -iconSize*0.9);
-                display.icons[cell.num] = r.image("../assets/"+fileName, cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
+                display.glows[cell.num] = r.image("/assets/starburst.png", cell.x, cell.y, iconSize*1.8, iconSize*1.8).attr("class", "cell icon glow").translate(-iconSize*0.9, -iconSize*0.9);
+                display.icons[cell.num] = r.image("/assets/"+fileName, cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
             }
         }
 
@@ -361,9 +389,9 @@ Raphael(function () {
                     break;
             }
             if (text != "") {
-                display.glows[cell.num] = r.image("../assets/starburst.png", cell.x, cell.y, iconSize*1.8, iconSize*1.8).attr("class", "cell icon glow").translate(-iconSize*0.9, -iconSize*0.9);
+                display.glows[cell.num] = r.image("/assets/starburst.png", cell.x, cell.y, iconSize*1.8, iconSize*1.8).attr("class", "cell icon glow").translate(-iconSize*0.9, -iconSize*0.9);
                 display.icons[cell.num] = r.set();
-                display.icons[cell.num].push(r.image("../assets/house.png", cell.x, cell.y, iconSize*1.2, iconSize*1.2).attr("class", "cell icon").translate(-iconSize*0.6, -iconSize*0.7));
+                display.icons[cell.num].push(r.image("/assets/house.png", cell.x, cell.y, iconSize*1.2, iconSize*1.2).attr("class", "cell icon").translate(-iconSize*0.6, -iconSize*0.7));
                 display.icons[cell.num].push(r.text(cell.x, cell.y, text).attr("font-size", "15px"));
             }
         }
