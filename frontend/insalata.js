@@ -361,10 +361,10 @@ Raphael(function () {
                     break;
             }
             if (text != "") {
-                display.glows[cell.num] = r.image("../assets/tomato.png", cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon glow").translate(-iconSize/2, -iconSize/2);
+                display.glows[cell.num] = r.image("../assets/starburst.png", cell.x, cell.y, iconSize*1.8, iconSize*1.8).attr("class", "cell icon glow").translate(-iconSize*0.9, -iconSize*0.9);
                 display.icons[cell.num] = r.set();
-                display.icons[cell.num].push(r.image("../assets/house.png", cell.x, cell.y, iconSize*1.2, iconSize*1.2).attr("class", "cell icon").translate(-iconSize*0.6, -iconSize*0.6));
-                display.icons[cell.num].push(r.text(cell.x, cell.y, text));
+                display.icons[cell.num].push(r.image("../assets/house.png", cell.x, cell.y, iconSize*1.2, iconSize*1.2).attr("class", "cell icon").translate(-iconSize*0.6, -iconSize*0.7));
+                display.icons[cell.num].push(r.text(cell.x, cell.y, text).attr("font-size", "15px"));
             }
         }
 
