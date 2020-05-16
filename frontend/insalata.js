@@ -178,6 +178,7 @@ Raphael(function () {
                         populateDisplay(_display, _state);
 
                         updateOtherPlayers(_state);
+                        addClass(document.getElementById("join-section"), "hidden");
 
                         if (_state.in_progress) {
                             updateScores(_state);
@@ -322,7 +323,7 @@ Raphael(function () {
         newState.myPlayerIndex = getPlayerIndex(newState.players, player_id);
         if (newState.myPlayerIndex >= 0) {
             if (_state && newState.myPlayerIndex != _state.myPlayerIndex) {
-                console.log("Glerk, my player index has changed! Hope that's ok...?");
+                console.log("Glerk, my player index has changed! Hope that's ok...?", _state.myPlayerIndex, newState.myPlayerIndex);
             }
             newState.me = newState.players[newState.myPlayerIndex];
         }
@@ -331,7 +332,7 @@ Raphael(function () {
     function updateState(newState) {
         findMe(newState);
         if (_state) {
-            if (sumScore(newState.me.score) > sumScore(_state.me.score)) {
+            if (_state.me && sumScore(newState.me.score) > sumScore(_state.me.score)) {
                 _display.sound.increaseScore.play();
             }
             for (var playerIndex = 0; playerIndex < newState.players.length; playerIndex++) {
@@ -340,12 +341,11 @@ Raphael(function () {
                     continue;
                 }
                 var player = _state.players[playerIndex];
-                if (sumScore(newPlayer.score) > sumScore(player.score)) {
+                if (player && sumScore(newPlayer.score) > sumScore(player.score)) {
                     _display.sound.otherPlayerScoreIncrease.play();
                 }
             }
         }
-        addClass(document.getElementById("join-section"), "hidden");
         if (newState.in_progress) {
             addClass(document.getElementById("startButton"), "hidden");
         }

@@ -286,6 +286,7 @@ def registerWSForGame(game_id, player_id, ws):
 async def sendMsgToGame(game_id, msg):
     if game_id not in _allGameSockets:
         return
+    print(f'sending type {msg["type"]} to game {game_id}')
     for gameSocket in _allGameSockets[game_id].values():
         await sendMsgToWS(gameSocket, msg)
 
@@ -293,6 +294,7 @@ async def sendMsgToGame(game_id, msg):
 async def sendMsgToWS(ws, msg):
     text = json.dumps(msg)
     #print('sending', text)
+    print(f'sending type {msg["type"]} to ws')
     await ws.send_str(text)
 
 
@@ -321,6 +323,10 @@ async def websocket_handler(request):
                 continue
             print('received', inmsg)
 
+            if "gameShortCode" in inmsg:
+                game_shortcode = inmsg["gameShortCode"]
+                registerWSForGame(game_shortcode, player_id, ws)
+
             if inmsg["type"] == "createGame":
                 if "board_id" in inmsg:
                     board_id = inmsg["board_id"]
@@ -335,7 +341,6 @@ async def websocket_handler(request):
                 await sendMsgToWS(ws, { "error": False, "type": "createdGame", "state": state })
 
             elif inmsg["type"] == "enquireGame":
-                game_shortcode = inmsg["gameShortCode"]
                 state = await getGameState(db, game_shortcode)
                 if not state:
                     await sendMsgToWS(ws, { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode })
@@ -348,7 +353,6 @@ async def websocket_handler(request):
                 await sendMsgToWS(ws, { "error": False, "type": "enquiryResults", "state": state })
 
             elif inmsg["type"] == "joinGame":
-                game_shortcode = inmsg["gameShortCode"]
                 state = await getGameState(db, game_shortcode)
                 if not state:
                     await sendMsgToWS(ws, { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode })
@@ -382,14 +386,11 @@ async def websocket_handler(request):
                 # broadcast newPlayerJoined
                 await sendMsgToGame(game_shortcode, { "error": False, "type": "newPlayerJoined", "state": state })
 
-                registerWSForGame(game_shortcode, player_id, ws)
-
                 if not state["in_progress"] and len(state["players"]) == MAX_PLAYERS:
                     await startGame(db, state)
                     await sendMsgToGame(game_shortcode, { "error": False, "type": "startedGame", "state": state })
 
             elif inmsg["type"] == "startGame":
-                game_shortcode = inmsg["gameShortCode"]
                 state = await getGameState(db, game_shortcode)
                 if not state:
                     await sendMsgToWS(ws, { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode })
@@ -405,7 +406,6 @@ async def websocket_handler(request):
                     await sendMsgToGame(game_shortcode, { "error": False, "type": "startedGame", "state": state })
 
             elif inmsg["type"] == "doMove":
-                game_shortcode = inmsg["gameShortCode"]
                 state = await getGameState(db, game_shortcode)
                 if not state:
                     await sendMsgToWS(ws, { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode })
