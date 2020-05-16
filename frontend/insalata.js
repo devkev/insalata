@@ -1,5 +1,15 @@
 Raphael(function () {
 
+    if( typeof Element.prototype.clearChildren === 'undefined' ) {
+        Object.defineProperty(Element.prototype, 'clearChildren', {
+          configurable: true,
+          enumerable: false,
+          value: function() {
+            while(this.firstChild) this.removeChild(this.lastChild);
+          }
+        });
+    }
+
     function makePolygonPath(x, y, N, side) {
         // draw a dot at the center point for visual reference
         //paper.circle(x, y, 3).attr("fill", "black");
@@ -74,12 +84,115 @@ Raphael(function () {
     if (document.location.protocol === "https:") {
         scheme += "s";
     }
-    var ws = new WebSocket(scheme + "://" + document.location.host + "/ws");
+    var ws;
+    var reconnectInterval;
+    tryConnect();
 
-    ws.onerror = function (event) {
-        console.log(event);
-        document.getElementById("errorbanner").append("ERROR: Unable to connect to server, try reloading");
-    };
+    function connectedToServer() {
+        return (ws && ws.readyState == WebSocket.OPEN);
+    }
+
+    function tryConnect() {
+        console.log("Trying to connect...");
+        if (!ws || ws.readyState == WebSocket.CLOSING || ws.readyState == WebSocket.CLOSED) {
+            try {
+                ws = new WebSocket(scheme + "://" + document.location.host + "/ws");
+
+                ws.onerror = function (event) {
+                    console.log(event);
+                    if (!document.getElementById("errorbanner").hasChildNodes()) {
+                        document.getElementById("errorbanner").append("ERROR: Unable to connect to server, trying to reconnect...");
+                    }
+                    if (!reconnectInterval) {
+                        reconnectInterval = setInterval(tryConnect, 1000);
+                    }
+                };
+
+                ws.onclose = function (event) {
+                    console.log(event);
+                    if (!document.getElementById("errorbanner").hasChildNodes()) {
+                        document.getElementById("errorbanner").append("ERROR: Lost connection to server, trying to reconnect...");
+                    }
+                    if (!reconnectInterval) {
+                        reconnectInterval = setInterval(tryConnect, 1000);
+
+                        for (var selectable of document.querySelectorAll(".selectable")) {
+                            addClass(selectable, "paused");
+                        }
+                    }
+                };
+
+                ws.onopen = function (event) {
+                    console.log("connected");
+                    document.getElementById("errorbanner").clearChildren();
+                    if (reconnectInterval) {
+                        clearInterval(reconnectInterval);
+                        reconnectInterval = undefined;
+
+                        for (var selectable of document.querySelectorAll(".selectable.paused")) {
+                            removeClass(selectable, "paused");
+                        }
+                    } else {
+                        if (document.location.pathname === '/') {
+                            // need to create a game
+                            createGame({/*board_id*/});
+                            // on successful response from this, redirect
+                        } else if (gameShortCode = getGameShortCode()) {
+                            joinGame({ gameShortCode, playerName: "you" });
+                        }
+                    }
+                };
+
+                ws.onmessage = function (event) {
+                    var inmsg = {};
+                    try {
+                        inmsg = JSON.parse(event.data);
+                    } catch (error) {
+                        console.log("Unable to parse data from server: " + event.data);
+                        return;
+                    }
+
+                    console.log("received", inmsg);
+                    if (inmsg.type === "createdGame") {
+                        var newurl = window.location.href;
+                        if (newurl[newurl.length - 1] !== '/') {
+                            newurl += "/";
+                        }
+                        newurl += "g/" + inmsg.state.shortcode;
+                        window.location.href = newurl;
+
+                    } else if (inmsg.type === "joinedGame") {
+                        updateState(inmsg.state);
+
+                        populateDisplay(_display, _state);
+
+                        updateScores(_state);
+                        updateBoard(_state);
+
+                        makeSelected(_display, _state);
+                        makeSelectable(_display, _state);
+
+                    } else if (inmsg.type === "newPlay") {
+                        updateState(inmsg.state);
+
+                        updateScores(_state);
+                        updateBoard(_state);
+
+                        makeSelected(_display, _state);
+                        makeSelectable(_display, _state);
+
+                    } else {
+                        console.log("Unknown message", inmsg);
+                    }
+                };
+
+            } catch (e) {
+                document.getElementById("errorbanner").append("ERROR: Unable to connect to server, trying to reconnect...");
+            }
+        }
+    }
+
+
 
     function getGameShortCode() {
         var match;
@@ -87,61 +200,6 @@ Raphael(function () {
             return match[1];
         }
     }
-
-    ws.onopen = function (event) {
-        console.log("connected");
-        var match;
-        if (document.location.pathname === '/') {
-            // need to create a game
-            createGame({/*board_id*/});
-            // on successful response from this, redirect
-        } else if (gameShortCode = getGameShortCode()) {
-            joinGame({ gameShortCode, playerName: "you" });
-        }
-    };
-
-    ws.onmessage = function (event) {
-        var inmsg = {};
-        try {
-            inmsg = JSON.parse(event.data);
-        } catch (error) {
-            console.log("Unable to parse data from server: " + event.data);
-            return;
-        }
-
-        console.log("received", inmsg);
-        if (inmsg.type === "createdGame") {
-            var newurl = window.location.href;
-            if (newurl[newurl.length - 1] !== '/') {
-                newurl += "/";
-            }
-            newurl += "g/" + inmsg.state.shortcode;
-            window.location.href = newurl;
-
-        } else if (inmsg.type === "joinedGame") {
-            updateState(inmsg.state);
-
-            populateDisplay(_display, _state);
-
-            updateScores(_state);
-            updateBoard(_state);
-
-            makeSelected(_display, _state);
-            makeSelectable(_display, _state);
-
-        } else if (inmsg.type === "newPlay") {
-            updateState(inmsg.state);
-
-            updateScores(_state);
-            updateBoard(_state);
-
-            makeSelected(_display, _state);
-            makeSelectable(_display, _state);
-
-        } else {
-            console.log("Unknown message", inmsg);
-        }
-    };
 
 
     function sendMessage(type, info) {
@@ -331,7 +389,7 @@ Raphael(function () {
             //line.hover(function() {
             lineInteract.attr("class", className + " interact");
             lineInteract.hover(function() {
-                if (hasClass(line.node, "selectable")) {
+                if (hasClass(line.node, "selectable") && connectedToServer()) {
                     _display.sound.hoverLine.play();
                     addClass(line.node, "hover");
                 }
@@ -341,16 +399,20 @@ Raphael(function () {
                 }
             }).click(function() {
                 if (hasClass(line.node, "selectable")) {
-                    _display.sound.selectLine.play();
-                    swapClass(line.node, "selectable", "selected");
-                    swapClass(lineInteract.node, "selectable", "selected");
-                    //setTimeout(function () {
-                        finishSelecting();
-                    //}, 0);
-                    var edgeIndex = line.data("edgeIndex");
-                    //setTimeout(function () {
-                        sendMove({edgeIndex});
-                    //}, 0);
+                    if (!connectedToServer()) {
+                        document.getElementById("errorbanner").append("ERROR: Cannot move while not connected to server!");
+                    } else {
+                        _display.sound.selectLine.play();
+                        swapClass(line.node, "selectable", "selected");
+                        swapClass(lineInteract.node, "selectable", "selected");
+                        //setTimeout(function () {
+                            finishSelecting();
+                        //}, 0);
+                        var edgeIndex = line.data("edgeIndex");
+                        //setTimeout(function () {
+                            sendMove({edgeIndex});
+                        //}, 0);
+                    }
                 }
             });
 
