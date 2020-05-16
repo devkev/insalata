@@ -83,6 +83,10 @@ body {
     stroke-width: 10px;
 }
 
+.paused {
+    animation-play-state: paused;
+}
+
 .selectable:not(.interact) {
     stroke: #00f;
     stroke-width: 3px;
