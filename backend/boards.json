@@ -3165,11 +3165,12 @@
   "name": "jojo-4-colours",
   "numRounds": 2,
   "cellColors": {
-    "red": { "normal": "#f004", "highlight": "#f00a" },
-    "green": { "normal": "#0f04", "highlight": "#0f0a" },
-    "blue": { "normal": "#00f4", "highlight": "#00fa" },
-    "purple": { "normal": "#6a00ff50", "highlight": "#6a00ffA0" }
+    "red": { "normal": "#f004", "highlight": "#f00a", "count": 9 },
+    "green": { "normal": "#0f04", "highlight": "#0f0a", "count": 8 },
+    "blue": { "normal": "#00f4", "highlight": "#00fa", "count": 7 },
+    "purple": { "normal": "#6a00ff50", "highlight": "#6a00ffA0", "count": 5 }
   },
+  "wilds": 3,
   "shopNames": [ "shopA", "shopB", "shopC", "shopD", "shopE" ],
   "targetsPoints": {
     "bowl": [ 1, 2 ],
@@ -3307,7 +3308,7 @@
     {
       "x": 198.20508075688772,
       "y": 100,
-      "color": "red"
+      "color": "purple"
     },
     {
       "x": 241.50635094610965,
@@ -3412,7 +3413,7 @@
     {
       "x": 198.20508075688772,
       "y": 175,
-      "color": "red"
+      "color": "purple"
     },
     {
       "x": 241.50635094610965,
@@ -3432,7 +3433,7 @@
     {
       "x": 371.41016151377545,
       "y": 175,
-      "color": "red",
+      "color": "purple",
       "contents": "shopE"
     },
     {
@@ -3449,7 +3450,7 @@
     {
       "x": 89.95190528383289,
       "y": 212.5,
-      "color": "red"
+      "color": "purple"
     },
     {
       "x": 133.25317547305482,
@@ -3489,7 +3490,7 @@
     {
       "x": 436.36206679760835,
       "y": 212.5,
-      "color": "red"
+      "color": "purple"
     },
     {
       "x": 25,
@@ -3550,7 +3551,7 @@
     {
       "x": 89.95190528383289,
       "y": 287.5,
-      "color": "red"
+      "color": "purple"
     },
     {
       "x": 133.25317547305482,
@@ -3571,7 +3572,7 @@
     {
       "x": 263.1569860407206,
       "y": 287.5,
-      "color": "blue"
+      "color": "purple"
     },
     {
       "x": 306.45825622994255,
@@ -3581,7 +3582,7 @@
     {
       "x": 349.75952641916444,
       "y": 287.5,
-      "color": "red"
+      "color": "green"
     },
     {
       "x": 393.0607966083864,
@@ -3626,7 +3627,7 @@
     {
       "x": 284.8076211353316,
       "y": 325,
-      "color": "red",
+      "color": "purple",
       "contents": "shopC"
     },
     {

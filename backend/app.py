@@ -26,11 +26,14 @@ initial_state_json = '''{
   "move_timeout": 30000,
   "num_events": 0,
   "num_players": 1,
+  "cards_left": [],
+  "round": 1,
   "players": [
     {
       "name": "you",
       "score": {
           "targets_current_round": 0,
+          "target_rounds": [],
           "targets_previous_rounds": [],
           "shops_joined": [],
           "bonuses": []
@@ -88,6 +91,14 @@ async def createNewGameState(db, board_id):
                     state["board"]["all_targets"].append(cell["num"])
                     state["board"]["targets"][targetName].append(cell["num"])
 
+    for color in state["board"]["cellColors"].keys():
+        currColor = state["board"]["cellColors"][color]
+        for x in range (0, currColor["count"]):
+            state["cards_left"].append(color)
+    if "wilds" in state["board"]:
+        for x in range(0, state["board"]["wilds"]):
+               state["cards_left"].append("wild")
+
     # FIXME: on DuplicateKey, generate another _id and shortcode and try again.
     state["_id"] = str(uuid.uuid4())
     state["shortcode"] = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
@@ -101,16 +112,12 @@ async def createNewGameState(db, board_id):
 async def getGameState(db, game_shortcode):
     return await db.games.find_one(SON([("shortcode", game_shortcode)]))
 
-
-def randomColorOrWild(board):
-    colorsOrWild = list(board["cellColors"].keys()).copy()
-    colorsOrWild.append("wild");
-    return random.choice(colorsOrWild)
-
 async def generateRandomPlay(db, state):
-    newPlay = [ randomColorOrWild(state["board"]), randomColorOrWild(state["board"]) ]
-    await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("plays", newPlay)]))]))
+    newPlay = random.sample(state["cards_left"], 2)
+    state["cards_left"].remove(newPlay[0])
+    state["cards_left"].remove(newPlay[1])
     state["plays"].append(newPlay)
+    await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("plays", newPlay)])), ("$set", SON([("cards_left", state["cards_left"])]))]))
 
 
 
@@ -163,7 +170,7 @@ def computeConnectedsForPlayer(board, playerState):
                         playerState["targets_connected_to_shops"][shopName][str(connected_cell)] = True
 
 
-
+#TODO jojo
 def updatePlayerScore(prevPlayerState, playerState):
     if len(playerState["connected_shops"].keys()) > len(prevPlayerState["connected_shops"].keys()):
         # newly connected shops
