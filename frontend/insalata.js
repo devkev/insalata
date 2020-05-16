@@ -326,6 +326,7 @@ Raphael(function () {
                 console.log("Glerk, my player index has changed! Hope that's ok...?", _state.myPlayerIndex, newState.myPlayerIndex);
             }
             newState.me = newState.players[newState.myPlayerIndex];
+            document.getElementById("myname").innerHTML = newState.me.name;
         }
     }
 
