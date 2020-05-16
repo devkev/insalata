@@ -195,6 +195,7 @@ body {
 }
 
 #title {
+    font-family: serif;
     font-variant: small-caps;
     font-size: 3em;
     margin-bottom: 20px;
