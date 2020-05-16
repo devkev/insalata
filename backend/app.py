@@ -18,6 +18,8 @@ from bson import SON
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 8080))
 
+MAX_PLAYERS = 8
+
 
 async def createNewGameState(db, board_id):
     state = {
@@ -87,27 +89,26 @@ async def createNewGameState(db, board_id):
 
 
 async def addNewPlayerToGame(db, state, player_id):
-    if getPlayerIndex(state["players"], player_id) is None:
-        newPlayer = {
-          "id": player_id,
-          "name": "you",
-          "score": {
-              "targets_current_round": 0,
-              "target_rounds": [],
-              "targets_previous_rounds": [],
-              "shops_joined": [],
-              "bonuses": []
-          },
-          "moves": [],
-          "cells_connected_to_shops": {},
-          "targets_connected_to_shops": {},
-          "connected_targets": {},
-          "connected_target_types": {},
-          "connected_shops": {},
-          "active_cells": {}
-        }
-        state["players"].append(newPlayer)
-        await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("players", newPlayer)]))]))
+    newPlayer = {
+      "id": player_id,
+      "name": "you",
+      "score": {
+          "targets_current_round": 0,
+          "target_rounds": [],
+          "targets_previous_rounds": [],
+          "shops_joined": [],
+          "bonuses": []
+      },
+      "moves": [],
+      "cells_connected_to_shops": {},
+      "targets_connected_to_shops": {},
+      "connected_targets": {},
+      "connected_target_types": {},
+      "connected_shops": {},
+      "active_cells": {}
+    }
+    state["players"].append(newPlayer)
+    await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("players", newPlayer)]))]))
 
 
 async def startGame(db, state):
@@ -248,9 +249,33 @@ def getPlayerIndex(players, player_id):
         if players[playerIndex]["id"] == player_id:
             return playerIndex
 
+def allPlayersHaveMoved(state):
+    numPlays = len(state["plays"])
+    for player in state["players"]:
+        if len(player["moves"]) != numPlays:
+            return False
+    return True
+
+
+_allGameSockets = {}
+
+def registerWSForGame(game_id, player_id, ws):
+    if not game_id in _allGameSockets:
+        _allGameSockets[game_id] = {}
+    _allGameSockets[game_id][player_id] = ws
+
+
+async def sendMsgToGame(game_id, msg):
+    if game_id not in _allGameSockets:
+        return
+    for gameSocket in _allGameSockets[game_id].values():
+        await sendMsgToWS(gameSocket, msg)
+
 
 async def sendMsgToWS(ws, msg):
-    await ws.send_str(json.dumps(msg))
+    text = json.dumps(msg)
+    #print('sending', text)
+    await ws.send_str(text)
 
 
 async def websocket_handler(request):
@@ -276,7 +301,7 @@ async def websocket_handler(request):
             except json.JSONDecodeError:
                 await sendMsgToWS(ws, { "error": True, "reason": "Unable to parse input" })
                 continue
-            print(inmsg)
+            print('received', inmsg)
 
             if inmsg["type"] == "createGame":
                 if "board_id" in inmsg:
@@ -298,21 +323,42 @@ async def websocket_handler(request):
                     await sendMsgToWS(ws, { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode })
                     continue
 
-                max_players = 8
-                if len(state["players"]) >= max_players:
-                    await sendMsgToWS(ws, { "error": True, "reason": "Game is full", "max_players": max_players })
-                    continue
+                if getPlayerIndex(state["players"], player_id) is None:
+                    if state["in_progress"]:
+                        await sendMsgToWS(ws, { "error": True, "reason": "Game has already started" })
+                        continue
 
-                await addNewPlayerToGame(db, state, player_id)
+                    if len(state["players"]) >= MAX_PLAYERS:
+                        await sendMsgToWS(ws, { "error": True, "reason": "Game is full", "max_players": MAX_PLAYERS })
+                        continue
+
+                    await addNewPlayerToGame(db, state, player_id)
 
                 await sendMsgToWS(ws, { "error": False, "type": "joinedGame", "state": state })
 
-                #if len(state["players"]) == 2:
-                if len(state["players"]) == 1 and not state["in_progress"]:
-                    await startGame(db, state)
+                # FIXME: broadcast newPlayerJoined
 
-                    # FIXME: send to the websockets of all players!!!!!!
-                    await sendMsgToWS(ws, { "error": False, "type": "startedGame", "state": state })
+                registerWSForGame(game_shortcode, player_id, ws)
+
+                if not state["in_progress"] and len(state["players"]) == MAX_PLAYERS:
+                    await startGame(db, state)
+                    await sendMsgToGame(game_shortcode, { "error": False, "type": "startedGame", "state": state })
+
+            elif inmsg["type"] == "startGame":
+                game_shortcode = inmsg["gameShortCode"]
+                state = await getGameState(db, game_shortcode)
+                if not state:
+                    await sendMsgToWS(ws, { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode })
+                    continue
+
+                playerIndex = getPlayerIndex(state["players"], player_id)
+                if playerIndex != 0:
+                    await sendMsgToWS(ws, { "error": True, "reason": "Only the first player can start the game" })
+                    continue
+
+                if not state["in_progress"]:
+                    await startGame(db, state)
+                    await sendMsgToGame(game_shortcode, { "error": False, "type": "startedGame", "state": state })
 
             elif inmsg["type"] == "doMove":
                 game_shortcode = inmsg["gameShortCode"]
@@ -321,26 +367,27 @@ async def websocket_handler(request):
                     await sendMsgToWS(ws, { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode })
                     continue
 
-                # FIXME: figure out the player from the player id
-                #playerIndex = 0
                 playerIndex = getPlayerIndex(state["players"], player_id)
-
                 player = state["players"][playerIndex]
                 prevPlayerState = copy.deepcopy(player)
                 edgeIndex = int(inmsg["move"])
+
+                # FIXME: validate that this edge is allowed
+
                 player["moves"].append(edgeIndex)
                 computeConnectedsForPlayer(state["board"], player)
                 updatePlayerScore(prevPlayerState, player, state["board"])
 
                 await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("players." + str(playerIndex), player)]))]))
+                await sendMsgToWS(ws, { "error": False, "type": "doneMove", "state": state })
 
-                # FIXME: only after all players have played
-                await generateRandomPlay(db, state)
+                if allPlayersHaveMoved(state):
+                    await generateRandomPlay(db, state)
+                    await sendMsgToGame(game_shortcode, { "error": False, "type": "newPlay", "state": state })
 
-                await sendMsgToWS(ws, { "error": False, "type": "newPlay", "state": state })
-
-            #else:
-            #    await sendMsgToWS(ws, { "error": True, "reason": "Unknown type", "type": inmsg["type"] })
+            else:
+                print('unknown type', inmsg)
+                #await sendMsgToWS(ws, { "error": True, "reason": "Unknown type", "type": inmsg["type"] })
 
     print('Websocket connection closed')
     return ws
