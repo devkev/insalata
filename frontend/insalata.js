@@ -378,8 +378,15 @@ Raphael(function () {
 
     function updateScores(state) {
         document.getElementById("score").innerHTML = sumScore(state.me.score);
-        document.getElementById("curr-round").innerHTML = sumScore(state.me.score.targets_current_round);
-        document.getElementById("prev-round").innerHTML = sumScore(state.me.score.targets_prev_rounds);
+
+        var current_round = state.round
+        for(var i=0; i<=current_round; i++) {
+            round_num = i+1;
+            removeClass(document.getElementById("round"+round_num+"-message"), "hidden");
+            document.getElementById("round"+round_num).innerHTML = state.me.score.target_rounds[i];
+            //document.getElementById("jojo").innerHTML = "round"+round_num+"-message";
+        }
+
         document.getElementById("houses").innerHTML = sumScore(state.me.score.shops_joined);
         document.getElementById("bonuses").innerHTML = sumScore(state.me.score.bonuses);
     }
