@@ -185,17 +185,24 @@ def updatePlayerScore(prevPlayerState, playerState, board):
 
     if len(playerState["connected_targets"].keys()) > len(prevPlayerState["connected_targets"].keys()):
         # newly connected targets
-        targets = list(playerState["connected_targets"].keys())
-        new_target = int(targets[len(playerState["connected_targets"].keys())-1])
-        
-        target_type = board["cells"][new_target]["contents"]
-        if target_type not in playerState["connected_target_types"]:
-            playerState["connected_target_types"][target_type] = 0
+        new_targets = []
+        for connected_target in playerState["connected_targets"].keys():
+            if connected_target not in prevPlayerState["connected_targets"]:
+                new_targets.append(connected_target)
 
-        num_targets = playerState["connected_target_types"][target_type]
-        score_increment = board["targetsPoints"][target_type][num_targets]
-        playerState["score"]["targets_current_round"] = playerState["score"]["targets_current_round"] + score_increment
-        playerState["connected_target_types"][target_type] = playerState["connected_target_types"][target_type] + 1
+        print(new_targets)
+
+        for new_target in new_targets:
+            target_type = board["cells"][int(new_target)]["contents"]
+            print(target_type)
+            if target_type not in playerState["connected_target_types"]:
+                playerState["connected_target_types"][target_type] = 0
+
+            num_targets = playerState["connected_target_types"][target_type]
+            print(num_targets)
+            score_increment = board["targetsPoints"][target_type][num_targets]
+            playerState["score"]["targets_current_round"] = playerState["score"]["targets_current_round"] + score_increment
+            playerState["connected_target_types"][target_type] = playerState["connected_target_types"][target_type] + 1
 
 
 
