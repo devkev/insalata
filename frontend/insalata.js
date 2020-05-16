@@ -268,11 +268,21 @@ Raphael(function () {
         document.getElementsByTagName("head")[0].appendChild(styleElement);
 
         for (var cell of state.board.cells) {
+            if(cell.color == "undefined") {
+                // cell does not exist, skip drawing it
+                continue;
+            }
+
             display.cells.push(r.path(makePolygonPath(cell.x, cell.y, 6, 25)).attr({"class": "cell " + cell.color}));
         }
 
         for (var edgeIndex = 0; edgeIndex < state.board.edges.length; edgeIndex++) {
             var edge = state.board.edges[edgeIndex];
+
+            if(state.board.cells[edge[0]].color == "undefined" || state.board.cells[edge[1]].color == "undefined") {
+                // one of these cells doesn't actually exist in this board, skip this line
+                continue;
+            }
 
             var path = "M" + state.board.cells[edge[0]].x + " " + state.board.cells[edge[0]].y +
                        "L" + state.board.cells[edge[1]].x + " " + state.board.cells[edge[1]].y;
