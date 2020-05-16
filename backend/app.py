@@ -7,6 +7,9 @@ import copy
 import os
 
 import aiohttp.web
+from motor.motor_asyncio import AsyncIOMotorClient
+from bson import SON
+
 
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 8080))
@@ -1788,9 +1791,24 @@ async def websocket_handler(request):
     return ws
 
 
-def app():
+DB_NAME = 'insalata'
+
+async def setup_db():
+    db = AsyncIOMotorClient()[DB_NAME]
+    # do any setup
+    print("Connecting to db...")
+    num_boards = await db.boards.count_documents({})
+    num_games = await db.games.count_documents({})
+    num_completed_games = await db.completed_games.count_documents({})
+    num_player_cookies = await db.player_cookies.count_documents({})
+    print(f"Database contains: {num_boards} boards, {num_games} in-progress games, {num_completed_games} completed games, {num_player_cookies} player auth cookies")
+    return db
+
+async def app():
     loop = asyncio.get_event_loop()
+    db = await setup_db()
     app = aiohttp.web.Application(loop=loop)
+    app['db'] = db
     app.router.add_static('/assets', path="../assets", name='assets')
     app.router.add_route('GET', '/ws', websocket_handler)
     app.router.add_route('*', "/", root_handler)
