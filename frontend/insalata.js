@@ -298,6 +298,7 @@ Raphael(function () {
         for (var cell of state.board.cells) {
             if(cell.color == "undefined") {
                 // cell does not exist, skip drawing it
+                display.cells.push(r.path(""));
                 continue;
             }
 
@@ -309,6 +310,8 @@ Raphael(function () {
 
             if(state.board.cells[edge[0]].color == "undefined" || state.board.cells[edge[1]].color == "undefined") {
                 // one of these cells doesn't actually exist in this board, skip this line
+                display.edges.push(r.path(""));
+                display.edgesInteract.push(r.path(""));
                 continue;
             }
 

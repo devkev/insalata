@@ -212,7 +212,7 @@ async def websocket_handler(request):
                     if "board_id" in inmsg:
                         board_id = inmsg["board_id"]
                     else:
-                        board_id = 1
+                        board_id = 2
                     state = await createNewGameState(db, board_id)
                     if state:
                         response = { "error": False, "type": "createdGame", "state": state }
