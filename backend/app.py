@@ -29,7 +29,7 @@ async def createNewGameState(db, board_id):
       "move_timeout": 30000,
       "num_events": 0,
       "cards_left": [],
-      "round": 1,
+      "round": 0,
       "players": [],
       "plays": []
     }
@@ -94,7 +94,7 @@ async def addNewPlayerToGame(db, state, player_id):
       "name": "you",
       "score": {
           "targets_current_round": 0,
-          "target_rounds": [],
+          "target_rounds": [0],
           "targets_previous_rounds": [],
           "shops_joined": [],
           "bonuses": []
@@ -177,13 +177,14 @@ def computeConnectedsForPlayer(board, playerState):
                             playerState["targets_connected_to_shops"][shopName] = {}
                         playerState["targets_connected_to_shops"][shopName][str(connected_cell)] = True
 
-
-def updatePlayerScore(prevPlayerState, playerState, board):
+def updatePlayerScore(prevPlayerState, playerState, state):
     if len(playerState["connected_shops"].keys()) > len(prevPlayerState["connected_shops"].keys()):
         # newly connected shops
         playerState["score"]["shops_joined"].append(5)
 
     if len(playerState["connected_targets"].keys()) > len(prevPlayerState["connected_targets"].keys()):
+        current_round = state["round"]
+
         # newly connected targets
         new_targets = []
         for connected_target in playerState["connected_targets"].keys():
@@ -193,15 +194,15 @@ def updatePlayerScore(prevPlayerState, playerState, board):
         print(new_targets)
 
         for new_target in new_targets:
-            target_type = board["cells"][int(new_target)]["contents"]
+            target_type = state["board"]["cells"][int(new_target)]["contents"]
             print(target_type)
             if target_type not in playerState["connected_target_types"]:
                 playerState["connected_target_types"][target_type] = 0
 
             num_targets = playerState["connected_target_types"][target_type]
             print(num_targets)
-            score_increment = board["targetsPoints"][target_type][num_targets]
-            playerState["score"]["targets_current_round"] = playerState["score"]["targets_current_round"] + score_increment
+            score_increment = state["board"]["targetsPoints"][target_type][num_targets]
+            playerState["score"]["target_rounds"][current_round] = playerState["score"]["target_rounds"][current_round] + score_increment
             playerState["connected_target_types"][target_type] = playerState["connected_target_types"][target_type] + 1
 
 
@@ -211,7 +212,7 @@ def updatePlayerScore(prevPlayerState, playerState, board):
 #    for player in state["players"]:
 #        prevPlayerState = copy.deepcopy(player)
 #        computeConnectedsForPlayer(state["board"], player)
-#        updatePlayerScore(prevPlayerState, player, state["board"])
+#        updatePlayerScore(prevPlayerState, player, state)
 
 
 
@@ -376,7 +377,7 @@ async def websocket_handler(request):
 
                 player["moves"].append(edgeIndex)
                 computeConnectedsForPlayer(state["board"], player)
-                updatePlayerScore(prevPlayerState, player, state["board"])
+                updatePlayerScore(prevPlayerState, player, state)
 
                 await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("players." + str(playerIndex), player)]))]))
                 await sendMsgToWS(ws, { "error": False, "type": "doneMove", "state": state })
