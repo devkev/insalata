@@ -219,6 +219,8 @@ Raphael(function () {
                         makeSelected(_display, _state);
                         makeSelectable(_display, _state);
 
+                        _display.sound.newPlay.play();
+
                     } else {
                         console.log("Unknown message", inmsg);
                         if (inmsg.error === true) {
@@ -285,6 +287,8 @@ Raphael(function () {
             selectLine: new Howl({ src: ['/assets/399934_1676145-lq.mp3'] }),
             hoverLine: new Howl({ src: ['/assets/338229_3972805-lq.mp3'] }),
             increaseScore: new Howl({ src: ['/assets/51715_113976-lq.mp3'] }),
+            newPlay: new Howl({ src: ['/assets/240776_4107740-lq.mp3'] }),
+            otherPlayerScoreIncrease: new Howl({ src: ['/assets/515643_10246545-lq.mp3'] }),
         },
     };
     _display.w = Math.sqrt(3) * _display.cellSize;
@@ -329,6 +333,16 @@ Raphael(function () {
         if (_state) {
             if (sumScore(newState.me.score) > sumScore(_state.me.score)) {
                 _display.sound.increaseScore.play();
+            }
+            for (var playerIndex = 0; playerIndex < newState.players.length; playerIndex++) {
+                var newPlayer = newState.players[playerIndex];
+                if (newState.me && newPlayer.id === newState.me.id) {
+                    continue;
+                }
+                var player = _state.players[playerIndex];
+                if (sumScore(newPlayer.score) > sumScore(player.score)) {
+                    _display.sound.otherPlayerScoreIncrease.play();
+                }
             }
         }
         addClass(document.getElementById("join-section"), "hidden");
