@@ -3210,7 +3210,8 @@
     {
       "x": 241.50635094610965,
       "y": 25,
-      "color": "red"
+      "color": "red",
+      "contents": "cucumber"
     },
     {
       "x": 284.8076211353316,
@@ -3267,7 +3268,8 @@
     {
       "x": 306.45825622994255,
       "y": 62.5,
-      "color": "red"
+      "color": "red",
+      "contents": "lettuce"
     },
     {
       "x": 349.75952641916444,
@@ -3293,17 +3295,20 @@
     {
       "x": 68.30127018922192,
       "y": 100,
-      "color": "red"
+      "color": "red",
+      "contents": "tomato"
     },
     {
       "x": 111.60254037844386,
       "y": 100,
-      "color": "purple"
+      "color": "purple",
+      "contents": "bowl"
     },
     {
       "x": 154.9038105676658,
       "y": 100,
-      "color": "green"
+      "color": "green",
+      "contents": "dressing"
     },
     {
       "x": 198.20508075688772,
