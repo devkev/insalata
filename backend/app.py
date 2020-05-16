@@ -102,6 +102,7 @@ async def addNewPlayerToGame(db, state, player_id):
           "cells_connected_to_shops": {},
           "targets_connected_to_shops": {},
           "connected_targets": {},
+          "connected_target_types": {},
           "connected_shops": {},
           "active_cells": {}
         }
@@ -176,15 +177,24 @@ def computeConnectedsForPlayer(board, playerState):
                         playerState["targets_connected_to_shops"][shopName][str(connected_cell)] = True
 
 
-#TODO jojo
-def updatePlayerScore(prevPlayerState, playerState):
+def updatePlayerScore(prevPlayerState, playerState, board):
     if len(playerState["connected_shops"].keys()) > len(prevPlayerState["connected_shops"].keys()):
         # newly connected shops
         playerState["score"]["shops_joined"].append(5)
 
     if len(playerState["connected_targets"].keys()) > len(prevPlayerState["connected_targets"].keys()):
         # newly connected targets
-        playerState["score"]["targets_current_round"] = playerState["score"]["targets_current_round"] + 1
+        targets = list(playerState["connected_targets"].keys())
+        new_target = int(targets[len(playerState["connected_targets"].keys())-1])
+        
+        target_type = board["cells"][new_target]["contents"]
+        if target_type not in playerState["connected_target_types"]:
+            playerState["connected_target_types"][target_type] = 0
+
+        num_targets = playerState["connected_target_types"][target_type]
+        score_increment = board["targetsPoints"][target_type][num_targets]
+        playerState["score"]["targets_current_round"] = playerState["score"]["targets_current_round"] + score_increment
+        playerState["connected_target_types"][target_type] = playerState["connected_target_types"][target_type] + 1
 
 
 
@@ -193,7 +203,7 @@ def updatePlayerScore(prevPlayerState, playerState):
 #    for player in state["players"]:
 #        prevPlayerState = copy.deepcopy(player)
 #        computeConnectedsForPlayer(state["board"], player)
-#        updatePlayerScore(prevPlayerState, player)
+#        updatePlayerScore(prevPlayerState, player, state["board"])
 
 
 
@@ -313,7 +323,7 @@ async def websocket_handler(request):
                 edgeIndex = int(inmsg["move"])
                 player["moves"].append(edgeIndex)
                 computeConnectedsForPlayer(state["board"], player)
-                updatePlayerScore(prevPlayerState, player)
+                updatePlayerScore(prevPlayerState, player, state["board"])
 
                 await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("players." + str(playerIndex), player)]))]))
 
