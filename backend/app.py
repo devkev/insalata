@@ -80,6 +80,8 @@ async def createNewGameState(db, board_id):
         for x in range(0, state["board"]["wilds"]):
                state["cards_left"].append("wild")
 
+    state["cards_list"] = state["cards_left"].copy()
+
     # FIXME: on DuplicateKey, generate another _id and shortcode and try again.
     state["_id"] = str(uuid.uuid4())
     state["shortcode"] = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
@@ -121,11 +123,26 @@ async def getGameState(db, game_shortcode):
     return await db.games.find_one(SON([("shortcode", game_shortcode)]))
 
 async def generateRandomPlay(db, state):
+    if len(state["cards_left"]) < 2:
+        # Start a new round!
+        state["round"] = state["round"]+1
+        if state["round"] == state["board"]["numRounds"]:
+               state["in_progress"] = False
+               state["time_ended"] = str(datetime.datetime.now())
+               return
+        state["cards_left"] = state["cards_list"].copy()
+        for player in state["players"]:
+            prev_score = player["score"]["target_rounds"][state["round"]-1]
+            player["score"]["target_rounds"].append(prev_score)
+
+
     newPlay = random.sample(state["cards_left"], 2)
     state["cards_left"].remove(newPlay[0])
     state["cards_left"].remove(newPlay[1])
     state["plays"].append(newPlay)
-    await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("plays", newPlay)])), ("$set", SON([("cards_left", state["cards_left"])]))]))
+    await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("plays", newPlay)])), \
+        ("$set", SON([("cards_left", state["cards_left"]), ("in_progress", state["in_progress"]), \
+        ("time_ended", state["time_ended"]), ("round", state["round"]), ("players", state["players"])]))]))
 
 
 
