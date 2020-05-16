@@ -183,6 +183,12 @@ Raphael(function () {
                         makeSelected(_display, _state);
                         makeSelectable(_display, _state);
 
+                    } else if (inmsg.type === "doneMove") {
+                        updateState(inmsg.state);
+
+                        updateScores(_state);
+                        updateBoard(_state);
+
                     } else if (inmsg.type === "newPlay") {
                         updateState(inmsg.state);
 
@@ -194,6 +200,9 @@ Raphael(function () {
 
                     } else {
                         console.log("Unknown message", inmsg);
+                        if (inmsg.error === true) {
+                            document.getElementById("errorbanner").append("ERROR: " + JSON.stringify(inmsg));
+                        }
                     }
                 };
 
@@ -252,13 +261,51 @@ Raphael(function () {
     _display.w = Math.sqrt(3) * _display.cellSize;
     _display.h = 2 * _display.cellSize;
 
+    function getPlayerId() {
+        // this is pretty dodgy, oh well. js-cookie is the right way to do it.
+        var match = document.cookie.match(/player_id=([0-9a-f-]*)/);
+        if (match) {
+            return match[1];
+        }
+    }
+
+    function getPlayerIndex(players, id) {
+        for (var playerIndex = 0; playerIndex < players.length; playerIndex++) {
+            if (players[playerIndex].id === id) {
+                return playerIndex;
+            }
+        }
+        return -1;
+    }
+
+    function findMe(newState) {
+        console.log(document.cookie);
+        var player_id = getPlayerId();
+        if (!player_id) {
+            document.getElementById("errorbanner").append("ERROR: Unable to determine player_id, cannot proceed! :(");
+            throw("ERROR: Unable to determine player_id, cannot proceed! :(");
+        }
+        console.log(player_id);
+        newState.myPlayerIndex = getPlayerIndex(newState.players, player_id);
+        if (newState.myPlayerIndex < 0) {
+            document.getElementById("errorbanner").append("ERROR: Not a player in this game, cannot proceed! :(");
+            throw("ERROR: Not a player in this game, cannot proceed! :(");
+        }
+        if (_state && newState.myPlayerIndex != _state.myPlayerIndex) {
+            console.log("Glerk, my player index has changed! Hope that's ok...?");
+        }
+        newState.me = newState.players[newState.myPlayerIndex];
+        newState.me.name = "me";
+    }
+
     function updateState(newState) {
+        findMe(newState);
         if (_state) {
-            if (sumScore(newState.players[0].score) > sumScore(_state.players[0].score)) {
+            if (sumScore(newState.me.score) > sumScore(_state.me.score)) {
                 _display.sound.increaseScore.play();
             }
         }
-
+        console.log(newState);
         _state = newState;
     }
 
@@ -281,7 +328,7 @@ Raphael(function () {
     }
 
     function updateBoard(state) {
-        var playerState = state.players[0];
+        var playerState = state.me;
 
         for (var active_cell in playerState.active_cells) {
             /* not the best looking effect, but good enough for now i guess */
@@ -297,11 +344,11 @@ Raphael(function () {
     }
 
     function updateScores(state) {
-        document.getElementById("score").innerHTML = sumScore(state.players[0].score);
-        document.getElementById("curr-round").innerHTML = sumScore(state.players[0].score.targets_current_round);
-        document.getElementById("prev-round").innerHTML = sumScore(state.players[0].score.targets_prev_rounds);
-        document.getElementById("houses").innerHTML = sumScore(state.players[0].score.shops_joined);
-        document.getElementById("bonuses").innerHTML = sumScore(state.players[0].score.bonuses);
+        document.getElementById("score").innerHTML = sumScore(state.me.score);
+        document.getElementById("curr-round").innerHTML = sumScore(state.me.score.targets_current_round);
+        document.getElementById("prev-round").innerHTML = sumScore(state.me.score.targets_prev_rounds);
+        document.getElementById("houses").innerHTML = sumScore(state.me.score.shops_joined);
+        document.getElementById("bonuses").innerHTML = sumScore(state.me.score.bonuses);
     }
 
     function getCurrentColors(state) {
@@ -316,7 +363,7 @@ Raphael(function () {
     }
 
     function makeSelected(display, state) {
-        for (var selected of state.players[0].moves) {
+        for (var selected of state.me.moves) {
             addClass(_display.edges[selected].node, "selected");
             removeClass(_display.edges[selected].node, "unselected");
             removeClass(_display.edges[selected].node, "selectable");
