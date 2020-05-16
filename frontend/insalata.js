@@ -166,6 +166,8 @@ Raphael(function () {
 
                         populateDisplay(_display, _state);
 
+                        updateOtherPlayers(_state);
+
                         if (_state.in_progress) {
                             updateScores(_state);
                             updateBoard(_state);
@@ -174,11 +176,17 @@ Raphael(function () {
                             makeSelectable(_display, _state);
                         }
 
+                    } else if (inmsg.type === "newPlayerJoined") {
+                        updateState(inmsg.state);
+
+                        updateOtherPlayers(_state);
+
                     } else if (inmsg.type === "startedGame") {
                         updateState(inmsg.state);
 
                         updateScores(_state);
                         updateBoard(_state);
+                        updateOtherPlayers(_state);
 
                         makeSelected(_display, _state);
                         makeSelectable(_display, _state);
@@ -188,12 +196,14 @@ Raphael(function () {
 
                         updateScores(_state);
                         updateBoard(_state);
+                        updateOtherPlayers(_state);
 
                     } else if (inmsg.type === "newPlay") {
                         updateState(inmsg.state);
 
                         updateScores(_state);
                         updateBoard(_state);
+                        updateOtherPlayers(_state);
 
                         makeSelected(_display, _state);
                         makeSelectable(_display, _state);
@@ -347,6 +357,22 @@ Raphael(function () {
         }
         for (var connected_shop in playerState.connected_shops) {
             addClass(_display.glows[connected_shop].node, "highlight");
+        }
+    }
+
+    function updateOtherPlayers(state) {
+        for (var player of state.players) {
+            if (player.id === state.me.id) {
+                continue;
+            }
+            var playerEntry = document.getElementById(player.id);
+            if (!playerEntry) {
+                var otherPlayers = document.getElementById("other-players");
+                playerEntry = document.createElement("li");
+                playerEntry.setAttribute("id", player.id);
+                otherPlayers.appendChild(playerEntry);
+            }
+            playerEntry.innerHTML = player.name + ": " + sumScore(player.score);
         }
     }
 

@@ -337,7 +337,8 @@ async def websocket_handler(request):
 
                 await sendMsgToWS(ws, { "error": False, "type": "joinedGame", "state": state })
 
-                # FIXME: broadcast newPlayerJoined
+                # broadcast newPlayerJoined
+                await sendMsgToGame(game_shortcode, { "error": False, "type": "newPlayerJoined", "state": state })
 
                 registerWSForGame(game_shortcode, player_id, ws)
 
