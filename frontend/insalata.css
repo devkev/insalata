@@ -198,7 +198,13 @@ body {
     font-family: serif;
     font-variant: small-caps;
     font-size: 3em;
-    margin-bottom: 20px;
+    margin-bottom: 0.5em;
+}
+
+#title img {
+    height: 2em;
+    display: block;
+    margin-bottom: -0.5em;
 }
 
 /*
