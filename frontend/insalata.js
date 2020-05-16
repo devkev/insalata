@@ -372,5 +372,5 @@ Raphael(function () {
 
 });
 /*
-vim: et ts=4 si ai:
+vim: et:ts=4:si:ai:
 */
