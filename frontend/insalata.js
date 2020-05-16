@@ -138,7 +138,7 @@ Raphael(function () {
                             createGame({/*board_id*/});
                             // on successful response from this, redirect
                         } else if (gameShortCode = getGameShortCode()) {
-                            joinGame({ gameShortCode, playerName: "you" });
+                            enquireGame({ gameShortCode });
                         }
                     }
                 };
@@ -160,6 +160,17 @@ Raphael(function () {
                         }
                         newurl += "g/" + inmsg.state.shortcode;
                         window.location.href = newurl;
+
+                    } else if (inmsg.type === "enquiryResults") {
+                        // if i'm already in this game, then just join it again.  otherwise show the join-section.
+                        var enquiryState = inmsg.state;
+                        findMe(enquiryState);
+                        updateOtherPlayers(enquiryState);
+                        if (enquiryState.me) {
+                            joinGame({ gameShortCode: getGameShortCode() });
+                        } else {
+                            removeClass(document.getElementById("join-section"), "hidden");
+                        }
 
                     } else if (inmsg.type === "joinedGame") {
                         updateState(inmsg.state);
@@ -191,7 +202,7 @@ Raphael(function () {
                         makeSelected(_display, _state);
                         makeSelectable(_display, _state);
 
-                    } else if (inmsg.type === "doneMove") {
+                    } else if (inmsg.type === "playerMoved") {
                         updateState(inmsg.state);
 
                         updateScores(_state);
@@ -241,6 +252,10 @@ Raphael(function () {
     function createGame({boardId}) {
         // FIXME: board_id
         sendMessage("createGame");
+    }
+
+    function enquireGame({gameShortCode}) {
+        sendMessage("enquireGame", { gameShortCode });
     }
 
     function startGame({gameShortCode}) {
@@ -301,15 +316,12 @@ Raphael(function () {
         }
         console.log(player_id);
         newState.myPlayerIndex = getPlayerIndex(newState.players, player_id);
-        if (newState.myPlayerIndex < 0) {
-            document.getElementById("errorbanner").append("ERROR: Not a player in this game, cannot proceed! :(");
-            throw("ERROR: Not a player in this game, cannot proceed! :(");
+        if (newState.myPlayerIndex >= 0) {
+            if (_state && newState.myPlayerIndex != _state.myPlayerIndex) {
+                console.log("Glerk, my player index has changed! Hope that's ok...?");
+            }
+            newState.me = newState.players[newState.myPlayerIndex];
         }
-        if (_state && newState.myPlayerIndex != _state.myPlayerIndex) {
-            console.log("Glerk, my player index has changed! Hope that's ok...?");
-        }
-        newState.me = newState.players[newState.myPlayerIndex];
-        newState.me.name = "me";
     }
 
     function updateState(newState) {
@@ -319,6 +331,7 @@ Raphael(function () {
                 _display.sound.increaseScore.play();
             }
         }
+        addClass(document.getElementById("join-section"), "hidden");
         if (newState.in_progress) {
             addClass(document.getElementById("startButton"), "hidden");
         }
@@ -362,7 +375,7 @@ Raphael(function () {
 
     function updateOtherPlayers(state) {
         for (var player of state.players) {
-            if (player.id === state.me.id) {
+            if (state.me && player.id === state.me.id) {
                 continue;
             }
             var playerEntry = document.getElementById(player.id);
@@ -437,6 +450,27 @@ Raphael(function () {
     document.getElementById("startButton").onclick = function () {
         startGame({ gameShortCode: getGameShortCode() });
     };
+
+    function joinGameButton() {
+        var nameElem = document.getElementById("name");
+        if (!nameElem) {
+            return;
+        }
+        var name = nameElem.value;
+        if (!name) {
+            nameElem.placeholder = "ENTER YOUR NAME";
+            return;
+        }
+        nameElem.placeholder = "Enter your name";
+        joinGame({ gameShortCode: getGameShortCode(), playerName: name });
+    };
+
+    document.getElementById("joinButton").onclick = joinGameButton;
+    document.getElementById("name").addEventListener("keyup", event => {
+        if(event.key !== "Enter") return;
+        document.querySelector("#joinButton").click();
+        event.preventDefault();
+    });
 
     function populateDisplay(display, state) {
         var css = "";
