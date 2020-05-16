@@ -166,6 +166,17 @@ Raphael(function () {
 
                         populateDisplay(_display, _state);
 
+                        if (_state.in_progress) {
+                            updateScores(_state);
+                            updateBoard(_state);
+
+                            makeSelected(_display, _state);
+                            makeSelectable(_display, _state);
+                        }
+
+                    } else if (inmsg.type === "startedGame") {
+                        updateState(inmsg.state);
+
                         updateScores(_state);
                         updateBoard(_state);
 
@@ -203,7 +214,7 @@ Raphael(function () {
 
 
     function sendMessage(type, info) {
-        var msg = Object.assign({ auth: 1, type }, info);
+        var msg = Object.assign({ type }, info);
         console.log("sending", msg);
         ws.send(JSON.stringify(msg));
     }

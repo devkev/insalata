@@ -7,6 +7,7 @@ import copy
 import os
 import uuid
 import string
+import datetime
 
 import aiohttp.web
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -18,38 +19,17 @@ HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 8080))
 
 
-initial_state_json = '''{
-  "shortcode": "",
-  "in_progress": true,
-  "time_started": "2020-05-15T05:43:17.171Z",
-  "time_ended": null,
-  "move_timeout": 30000,
-  "num_events": 0,
-  "num_players": 1,
-  "players": [
-    {
-      "name": "you",
-      "score": {
-          "targets_current_round": 0,
-          "targets_previous_rounds": [],
-          "shops_joined": [],
-          "bonuses": []
-      },
-      "auth_cookie_id": 0,
-      "moves": [],
-      "cells_connected_to_shops": {},
-      "targets_connected_to_shops": {},
-      "connected_targets": {},
-      "connected_shops": {},
-      "active_cells": {}
-    }
-  ],
-  "plays": []
-}'''
-
-
 async def createNewGameState(db, board_id):
-    state = json.loads(initial_state_json)
+    state = {
+      "in_progress": False,
+      "time_started": str(datetime.datetime.now()),
+      "time_ended": None,
+      "move_timeout": 30000,
+      "num_events": 0,
+      "players": [],
+      "plays": []
+    }
+
     state["board"] = await db.boards.find_one(board_id)
     if not state["board"]:
         return None
@@ -93,10 +73,36 @@ async def createNewGameState(db, board_id):
     state["shortcode"] = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
     result = await db.games.insert_one(state)
 
-    # FIXME: this should move to startGame
+    return state
+
+
+async def addNewPlayerToGame(db, state, player_id):
+    if getPlayerIndex(state["players"], player_id) is None:
+        newPlayer = {
+          "id": player_id,
+          "name": "you",
+          "score": {
+              "targets_current_round": 0,
+              "targets_previous_rounds": [],
+              "shops_joined": [],
+              "bonuses": []
+          },
+          "moves": [],
+          "cells_connected_to_shops": {},
+          "targets_connected_to_shops": {},
+          "connected_targets": {},
+          "connected_shops": {},
+          "active_cells": {}
+        }
+        state["players"].append(newPlayer)
+        await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("players", newPlayer)]))]))
+
+
+async def startGame(db, state):
+    state["in_progress"] = True
+    await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("in_progress", True)]))]))
     await generateRandomPlay(db, state)
 
-    return state
 
 async def getGameState(db, game_shortcode):
     return await db.games.find_one(SON([("shortcode", game_shortcode)]))
@@ -187,74 +193,130 @@ def updatePlayerScore(prevPlayerState, playerState):
 #async def testhandle(request):
 #    return aiohttp.web.Response(text='Test handle')
 
+async def getPlayerId(db, player_cookie, expected_player_id):
+    document = await db.player_cookies.find_one(SON([("cookie", player_cookie)]))
+    if not document or document["_id"] != expected_player_id:
+        return None
+    else:
+        return document["_id"]
+
+
 async def root_handler(request):
     #return aiohttp.web.HTTPFound('/index.html')
-    return aiohttp.web.FileResponse('../frontend/index.html')
+    response = aiohttp.web.FileResponse('../frontend/index.html')
+    db = request.app['db']
+    if "player_cookie" not in request.cookies or "player_id" not in request.cookies or await getPlayerId(db, request.cookies["player_cookie"], request.cookies["player_id"]) is None:
+        now = datetime.datetime.now()
+        player_cookie_doc = {
+            "_id": str(uuid.uuid4()),
+            "cookie": ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=42)),
+            "created": now,
+            "lastused": now,
+        }
+        result = await db.player_cookies.insert_one(player_cookie_doc)
+        response.set_cookie('player_cookie', player_cookie_doc["cookie"], max_age = 10*365*24*60*60)
+        response.set_cookie('player_id', player_cookie_doc["_id"], max_age = 10*365*24*60*60)
+    return response
+
+
+def getPlayerIndex(players, player_id):
+    for playerIndex in range(len(players)):
+        if players[playerIndex]["id"] == player_id:
+            return playerIndex
+
+
+async def sendMsgToWS(ws, msg):
+    await ws.send_str(json.dumps(msg))
 
 
 async def websocket_handler(request):
     ws = aiohttp.web.WebSocketResponse()
     await ws.prepare(request)
+    print(request.cookies)
+    if "player_cookie" not in request.cookies or "player_id" not in request.cookies:
+        await ws.close()
+        return ws
+    player_cookie = request.cookies["player_cookie"]
+    db = request.app['db']
+    player_id = await getPlayerId(db, player_cookie, request.cookies["player_id"])
+    if player_id is None:
+        await ws.close()
+        return ws
+
     print('new websocket connection accepted')
 
     async for msg in ws:
         if msg.type == aiohttp.WSMsgType.TEXT:
-            response = {}
             try:
                 inmsg = json.loads(msg.data)
-                print(inmsg)
-
-                db = request.app['db']
-
-                #response = { "error": False, "input": inmsg }
-
-                if inmsg["type"] == "createGame":
-                    if "board_id" in inmsg:
-                        board_id = inmsg["board_id"]
-                    else:
-                        board_id = 2
-                    state = await createNewGameState(db, board_id)
-                    if state:
-                        response = { "error": False, "type": "createdGame", "state": state }
-                    else:
-                        response = { "error": True, "reason": "Unknown board id", "board_id": board_id }
-
-                elif inmsg["type"] == "joinGame":
-                    # FIXME: figure out the player from the auth token
-
-                    game_shortcode = inmsg["gameShortCode"]
-                    state = await getGameState(db, game_shortcode)
-                    if state:
-                        response = { "error": False, "type": "joinedGame", "state": state }
-                    else:
-                        response = { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode }
-
-                elif inmsg["type"] == "doMove":
-                    # FIXME: figure out the player from the auth token
-                    playerIndex = 0
-
-                    game_shortcode = inmsg["gameShortCode"]
-                    state = await getGameState(db, game_shortcode)
-
-                    player = state["players"][playerIndex]
-                    prevPlayerState = copy.deepcopy(player)
-                    edgeIndex = int(inmsg["move"])
-                    player["moves"].append(edgeIndex)
-                    computeConnectedsForPlayer(state["board"], player)
-                    updatePlayerScore(prevPlayerState, player)
-
-                    await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("players." + str(playerIndex), player)]))]))
-
-                    await generateRandomPlay(db, state)
-
-                    response = { "error": False, "type": "newPlay", "state": state }
-
-                else:
-                    response = { "error": True, "reason": "Unknown type", "type": inmsg["type"] }
-
             except json.JSONDecodeError:
-                response = { "error": True, "reason": "Unable to parse input" }
-            await ws.send_str(json.dumps(response))
+                await sendMsgToWS(ws, { "error": True, "reason": "Unable to parse input" })
+                continue
+            print(inmsg)
+
+            if inmsg["type"] == "createGame":
+                if "board_id" in inmsg:
+                    board_id = inmsg["board_id"]
+                else:
+                    board_id = 2
+
+                state = await createNewGameState(db, board_id)
+                if not state:
+                    await sendMsgToWS(ws, { "error": True, "reason": "Unknown board id", "board_id": board_id })
+                    continue
+
+                await sendMsgToWS(ws, { "error": False, "type": "createdGame", "state": state })
+
+            elif inmsg["type"] == "joinGame":
+                game_shortcode = inmsg["gameShortCode"]
+                state = await getGameState(db, game_shortcode)
+                if not state:
+                    await sendMsgToWS(ws, { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode })
+                    continue
+
+                max_players = 8
+                if len(state["players"]) >= max_players:
+                    await sendMsgToWS(ws, { "error": True, "reason": "Game is full", "max_players": max_players })
+                    continue
+
+                await addNewPlayerToGame(db, state, player_id)
+
+                await sendMsgToWS(ws, { "error": False, "type": "joinedGame", "state": state })
+
+                #if len(state["players"]) == 2:
+                if len(state["players"]) == 1 and not state["in_progress"]:
+                    await startGame(db, state)
+
+                    # FIXME: send to the websockets of all players!!!!!!
+                    await sendMsgToWS(ws, { "error": False, "type": "startedGame", "state": state })
+
+            elif inmsg["type"] == "doMove":
+                game_shortcode = inmsg["gameShortCode"]
+                state = await getGameState(db, game_shortcode)
+                if not state:
+                    await sendMsgToWS(ws, { "error": True, "reason": "Unknown game shortcode", "game_shortcode": game_shortcode })
+                    continue
+
+                # FIXME: figure out the player from the player id
+                #playerIndex = 0
+                playerIndex = getPlayerIndex(state["players"], player_id)
+
+                player = state["players"][playerIndex]
+                prevPlayerState = copy.deepcopy(player)
+                edgeIndex = int(inmsg["move"])
+                player["moves"].append(edgeIndex)
+                computeConnectedsForPlayer(state["board"], player)
+                updatePlayerScore(prevPlayerState, player)
+
+                await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("players." + str(playerIndex), player)]))]))
+
+                # FIXME: only after all players have played
+                await generateRandomPlay(db, state)
+
+                await sendMsgToWS(ws, { "error": False, "type": "newPlay", "state": state })
+
+            #else:
+            #    await sendMsgToWS(ws, { "error": True, "reason": "Unknown type", "type": inmsg["type"] })
 
     print('Websocket connection closed')
     return ws
