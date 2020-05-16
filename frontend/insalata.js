@@ -201,6 +201,10 @@ Raphael(function () {
 
     function updateScores(state) {
         document.getElementById("score").innerHTML = sumScore(state.players[0].score);
+        document.getElementById("curr-round").innerHTML = sumScore(state.players[0].score.targets_current_round);
+        document.getElementById("prev-round").innerHTML = sumScore(state.players[0].score.targets_prev_rounds);
+        document.getElementById("houses").innerHTML = sumScore(state.players[0].score.shops_joined);
+        document.getElementById("bonuses").innerHTML = sumScore(state.players[0].score.bonuses);
     }
 
     function getCurrentColors(state) {
