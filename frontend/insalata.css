@@ -22,6 +22,16 @@ body {
     /*display: none;*/
 }
 
+#score-section {
+    float: left;
+    width: 50%;
+}
+
+#color-section {
+    width: 50%;
+    float: right;
+}
+
 .unselected {
 /*
     stroke: #000;
