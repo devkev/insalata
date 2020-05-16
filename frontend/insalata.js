@@ -195,7 +195,7 @@ Raphael(function () {
             addClass(_display.glows[connected_target].node, "highlight");
         }
         for (var connected_shop in playerState.connected_shops) {
-            addClass(_display.glows[connected_target].node, "highlight");
+            addClass(_display.glows[connected_shop].node, "highlight");
         }
     }
 
