@@ -233,6 +233,10 @@ Raphael(function () {
         sendMessage("createGame");
     }
 
+    function startGame({gameShortCode}) {
+        sendMessage("startGame", { gameShortCode });
+    }
+
     function joinGame({gameShortCode, playerName}) {
         sendMessage("joinGame", { gameShortCode, playerName });
     }
@@ -304,6 +308,9 @@ Raphael(function () {
             if (sumScore(newState.me.score) > sumScore(_state.me.score)) {
                 _display.sound.increaseScore.play();
             }
+        }
+        if (newState.in_progress) {
+            addClass(document.getElementById("startButton"), "hidden");
         }
         console.log(newState);
         _state = newState;
@@ -401,6 +408,10 @@ Raphael(function () {
         }
     }
 
+    document.getElementById("startButton").onclick = function () {
+        startGame({ gameShortCode: getGameShortCode() });
+    };
+
     function populateDisplay(display, state) {
         var css = "";
         for (var cellColor in state.board.cellColors) {
@@ -410,6 +421,11 @@ Raphael(function () {
         var styleElement = document.createElement("style");
         styleElement.appendChild(document.createTextNode(css));
         document.getElementsByTagName("head")[0].appendChild(styleElement);
+
+        if (state.myPlayerIndex === 0 && !state.in_progress) {
+            // I get to say when the game starts
+            removeClass(document.getElementById("startButton"), "hidden");
+        }
 
         for (var cell of state.board.cells) {
             if(cell.color == "undefined") {
