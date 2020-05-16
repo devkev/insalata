@@ -73,7 +73,7 @@ body {
 
 .selectable:not(.interact) {
     stroke: #00f;
-    stroke-width: 4px;
+    stroke-width: 3px;
     animation-duration: 1s;
     animation-name: colorbounce;
     animation-iteration-count: infinite;
@@ -102,7 +102,7 @@ body {
     animation-name: colorbouncehover;
     animation-play-state: paused, running;
 */
-    stroke-width: 6px;
+    stroke-width: 5px;
     animation-duration: 1s, 0.5s;
     animation-name: colorbounce, colorbouncehover;
     animation-iteration-count: infinite;
