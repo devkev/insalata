@@ -194,6 +194,12 @@ body {
     background-color: rgba(0, 0, 255, 1);
 }
 
+#title {
+    font-variant: small-caps;
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
 /*
 vim: et:ts=4:sw=4:si:ai:
 */
