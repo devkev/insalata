@@ -39,6 +39,12 @@ body {
 }
 .cell.icon {
 }
+.cell.icon.glow {
+    opacity: 0;
+}
+.cell.icon.glow.highlight {
+    opacity: 1;
+}
 
 .selected.interact {
     stroke: #0000;

@@ -1618,7 +1618,8 @@ initial_state_json = '''{
       "cells_connected_to_shops": {},
       "targets_connected_to_shops": {},
       "connected_targets": {},
-      "connected_shops": {}
+      "connected_shops": {},
+      "active_cells": {}
     }
   ],
   "plays": []
@@ -1700,6 +1701,8 @@ def computeConnectedsForPlayer(board, playerState):
         edge = board["edges"][edgeIndex]
         player_cell_connections[edge[0]][edge[1]] = True
         player_cell_connections[edge[1]][edge[0]] = True
+        playerState["active_cells"][edge[0]] = True
+        playerState["active_cells"][edge[1]] = True
 
     shops = board["shops"]
     for shopName in shops.keys():

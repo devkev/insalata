@@ -102,7 +102,7 @@ Raphael(function () {
             populateDisplay(_display, _state);
 
             updateScores(_state);
-            updateIcons(_state);
+            updateBoard(_state);
 
             makeSelected(_display, _state);
             makeSelectable(_display, _state);
@@ -111,7 +111,7 @@ Raphael(function () {
             updateState(inmsg.state);
 
             updateScores(_state);
-            updateIcons(_state);
+            updateBoard(_state);
 
             makeSelected(_display, _state);
             makeSelectable(_display, _state);
@@ -183,20 +183,19 @@ Raphael(function () {
         }
     }
 
-    function updateIcons(state) {
-        for (var connected_target in state.players[0].connected_targets) {
-            if ( ! (connected_target in _display.glows)) {
-                //_display.glows[connected_target] = _display.icons[connected_target].glow();
-                _display.glows[connected_target] = true;
-                addClass(_display.cells[connected_target].node, "highlight");
-            }
+    function updateBoard(state) {
+        var playerState = state.players[0];
+
+        for (var active_cell in playerState.active_cells) {
+            /* not the best looking effect, but good enough for now i guess */
+            addClass(_display.cells[active_cell].node, "highlight");
         }
-        for (var connected_shop in state.players[0].connected_shops) {
-            if ( ! (connected_shop in _display.glows)) {
-                //_display.glows[connected_shop] = _display.icons[connected_shop].glow();
-                _display.glows[connected_shop] = true;
-                addClass(_display.cells[connected_shop].node, "highlight");
-            }
+
+        for (var connected_target in playerState.connected_targets) {
+            addClass(_display.glows[connected_target].node, "highlight");
+        }
+        for (var connected_shop in playerState.connected_shops) {
+            addClass(_display.glows[connected_target].node, "highlight");
         }
     }
 
@@ -336,6 +335,7 @@ Raphael(function () {
                     break;
             }
             if (fileName != "") {
+                display.glows[cell.num] = r.image("../assets/tomato.png", cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon glow").translate(-iconSize/2, -iconSize/2);
                 display.icons[cell.num] = r.image("../assets/"+fileName, cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize/2);
             }
         }
@@ -361,6 +361,7 @@ Raphael(function () {
                     break;
             }
             if (text != "") {
+                display.glows[cell.num] = r.image("../assets/tomato.png", cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon glow").translate(-iconSize/2, -iconSize/2);
                 display.icons[cell.num] = r.set();
                 display.icons[cell.num].push(r.image("../assets/shop1.png", cell.x, cell.y, iconSize, iconSize).attr("class", "cell icon").translate(-iconSize/2, -iconSize-5));
                 display.icons[cell.num].push(r.text(cell.x, cell.y, text));
