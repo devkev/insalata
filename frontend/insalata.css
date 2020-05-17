@@ -41,6 +41,24 @@ body {
 }
 
 #score-section {
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px;
+    text-align: initial;
+}
+
+#score-message {
+    font-size: 6em;
+    text-align: center;
+}
+
+#myname-section {
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px;
+    text-align: center;
 }
 
 #color-section {
@@ -179,7 +197,11 @@ body {
 }
 
 #other-players-section {
-    margin-top: 10px;
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px;
+    text-align: initial;
 }
 
 #other-players {
@@ -358,11 +380,13 @@ body {
 #left {
     padding: 10px;
     flex: min-content;
+    text-align: center;
 }
 
 #right {
     padding: 10px;
     flex: min-content;
+    text-align: center;
 }
 
 #center {

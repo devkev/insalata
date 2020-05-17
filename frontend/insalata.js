@@ -273,7 +273,7 @@ Raphael(function () {
                             if (_state.myPlayerIndex === 0) {
                                 banner("Waiting for other players to join, click Start Game when ready!");
                             } else {
-                                banner("Waiting for other players to join...");
+                                banner("Waiting for the game to start...");
                             }
                         }
 
@@ -438,7 +438,7 @@ Raphael(function () {
                 console.log("Glerk, my player index has changed! Hope that's ok...?", _state.myPlayerIndex, newState.myPlayerIndex);
             }
             newState.me = newState.players[newState.myPlayerIndex];
-            document.getElementById("myname").innerHTML = newState.me.name;
+            document.getElementById("myname").innerHTML = "Welcome, " + newState.me.name + "!";
         }
     }
 
