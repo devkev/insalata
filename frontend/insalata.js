@@ -532,6 +532,9 @@ Raphael(function () {
 
         document.getElementById("color1").innerHTML = currentColors[0];
         document.getElementById("color2").innerHTML = currentColors[1];
+
+        document.getElementById("patch1").className = "patch " + currentColors[0];
+        document.getElementById("patch2").className = "patch " + currentColors[1];
     }
 
     function makeSelected(display, state) {
@@ -647,6 +650,8 @@ Raphael(function () {
         for (var cellColor in state.board.cellColors) {
             css += ".cell." + cellColor + " { fill: " + state.board.cellColors[cellColor].normal + "; } ";
             css += ".cell." + cellColor + ".highlight { fill: " + state.board.cellColors[cellColor].highlight + "; } ";
+            css += ".patch." + cellColor + " { background-color: " + state.board.cellColors[cellColor].normal + "; } ";
+            css += ".patch." + cellColor + ".highlight { background-color: " + state.board.cellColors[cellColor].highlight + "; } ";
         }
         var styleElement = document.createElement("style");
         styleElement.appendChild(document.createTextNode(css));
