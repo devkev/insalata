@@ -294,22 +294,22 @@ def updatePlayerScore(prevPlayerState, playerState, state):
                 # I connected all the targets of this type
                 playerState["bonusLines"] = playerState["bonusLines"] + 1
 
-        # Did I get the saladcop bonus?
-        if playerState["score"]["saladcop_bonus"] == 0:
-            print("checking saladcop bonus")
-            saladcop_bonus_num = len(state["board"]["targets"].keys())
-            print("target bonus", saladcop_bonus_num)
-            for shop in list(playerState["targets_connected_to_shops"].keys()):
-                targets_connected = playerState["targets_connected_to_shops"][shop]
-                if len(targets_connected) >= saladcop_bonus_num:
-                    print("checking saladcop bonus types")
-                    connected_types = []
-                    for target in list(targets_connected.keys()):
-                        target_type = state["board"]["cells"][int(target)]["contents"]
-                        if target_type not in connected_types:
-                            connected_types.append(target_type)
-                    if len(connected_types) == saladcop_bonus_num:
-                        playerState["score"]["saladcop_bonus"] = 15
+    # Did I get the saladcop bonus?
+    if playerState["score"]["saladcop_bonus"] == 0:
+        print("checking saladcop bonus")
+        saladcop_bonus_num = len(state["board"]["targets"].keys())
+        print("target bonus", saladcop_bonus_num)
+        for shop in list(playerState["targets_connected_to_shops"].keys()):
+            targets_connected = playerState["targets_connected_to_shops"][shop]
+            if len(targets_connected) >= saladcop_bonus_num:
+                print("checking saladcop bonus types")
+                connected_types = []
+                for target in list(targets_connected.keys()):
+                    target_type = state["board"]["cells"][int(target)]["contents"]
+                    if target_type not in connected_types:
+                        connected_types.append(target_type)
+                if len(connected_types) == saladcop_bonus_num:
+                    playerState["score"]["saladcop_bonus"] = 15
 
 
 
