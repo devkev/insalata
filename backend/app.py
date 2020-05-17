@@ -428,7 +428,7 @@ async def websocket_handler(request):
                 if "board_id" in inmsg:
                     board_id = inmsg["board_id"]
                 else:
-                    board_id = 3
+                    board_id = 4
 
                 state = await createNewGameState(db, board_id)
                 if not state:
