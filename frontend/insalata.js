@@ -575,7 +575,7 @@ Raphael(function () {
         if (!state.in_progress && state.time_ended) {
             document.getElementById("moves-left").innerHTML = 0;
         } else {
-            document.getElementById("moves-left").innerHTML = (state.cards_left.length / 2) + 1;
+            document.getElementById("moves-left").innerHTML = Math.floor(state.cards_left.length / 2) + 1;
         }
     }
 
