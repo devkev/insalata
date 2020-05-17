@@ -85,7 +85,7 @@ body {
 }
 
 #rounds-left {
-    font-size: 4em;
+    font-size: 3em;
     text-align: center;
 }
 
@@ -101,7 +101,7 @@ body {
 }
 
 #moves-left {
-    font-size: 6em;
+    font-size: 5em;
     text-align: center;
 }
 
@@ -127,8 +127,8 @@ body {
 }
 
 .patch {
-    width: 4em;
-    height: 4em;
+    width: 3em;
+    height: 3em;
     border: 1px solid white;
     border-radius: 5px;
 }
