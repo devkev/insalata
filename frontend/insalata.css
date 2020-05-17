@@ -17,14 +17,27 @@ body {
     min-height: 100%;
 }
 
-#errorbanner {
-    top: 0px;
-    background-color: #f66;
-    color: black;
+#banner {
+    top: -2em;
+    margin-bottom: -2em;
+    height: 2em;
     font-weight: bold;
     text-align: center;
+    vertical-align: middle;
     width: 100%;
-    /*display: none;*/
+}
+
+#bannermsg {
+}
+
+#banner {
+    background-color: #6f6;
+    color: black;
+}
+
+#banner.error {
+    background-color: #f66;
+    color: black;
 }
 
 #score-section {
