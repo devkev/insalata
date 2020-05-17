@@ -82,6 +82,8 @@ Raphael(function () {
             increaseScore: new Howl({ src: ['/assets/51715_113976-lq.mp3'] }),
             newPlay: new Howl({ src: ['/assets/240776_4107740-lq.mp3'] }),
             otherPlayerScoreIncrease: new Howl({ src: ['/assets/515643_10246545-lq.mp3'] }),
+            completedGameNormal: new Howl({ src: ['/assets/432874_4157918-lq.mp3'] }),
+            completedGameWinner: new Howl({ src: ['/assets/456966_6456158-lq.mp3'] }),
         },
     };
     _display.cell_w = Math.sqrt(3) * _display.cellSize;
@@ -139,6 +141,33 @@ Raphael(function () {
         return (ws && ws.readyState == WebSocket.OPEN);
     }
 
+    var bannerElem = document.getElementById("banner");
+    var bannerMsgElem = document.getElementById("bannermsg");
+
+    function clearBanner() {
+        addClass(bannerElem, "hidden");
+        bannerMsgElem.clearChildren();
+        removeClass(bannerElem, "error");
+    }
+
+    function banner(msg) {
+        removeClass(bannerElem, "error");
+        bannerMsgElem.append(msg);
+        removeClass(bannerElem, "hidden");
+    }
+
+    function errorBanner(msg) {
+        addClass(bannerElem, "error");
+        bannerMsgElem.append("ERROR:" + msg);
+        removeClass(bannerElem, "hidden");
+    }
+
+    function errorBannerIfNotSet(msg) {
+        if (!bannerMsgElem.hasChildNodes()) {
+            errorBanner(msg);
+        }
+    }
+
     function tryConnect() {
         console.log("Trying to connect...");
         if (!ws || ws.readyState == WebSocket.CLOSING || ws.readyState == WebSocket.CLOSED) {
@@ -147,9 +176,7 @@ Raphael(function () {
 
                 ws.onerror = function (event) {
                     console.log(event);
-                    if (!document.getElementById("errorbanner").hasChildNodes()) {
-                        document.getElementById("errorbanner").append("ERROR: Unable to connect to server, trying to reconnect...");
-                    }
+                    errorBannerIfNotSet("Unable to connect to server, trying to reconnect...");
                     if (!reconnectInterval) {
                         reconnectInterval = setInterval(tryConnect, 1000);
                     }
@@ -157,9 +184,7 @@ Raphael(function () {
 
                 ws.onclose = function (event) {
                     console.log(event);
-                    if (!document.getElementById("errorbanner").hasChildNodes()) {
-                        document.getElementById("errorbanner").append("ERROR: Lost connection to server, trying to reconnect...");
-                    }
+                    errorBannerIfNotSet("Lost connection to server, trying to reconnect...");
                     if (!reconnectInterval) {
                         reconnectInterval = setInterval(tryConnect, 1000);
 
@@ -171,7 +196,7 @@ Raphael(function () {
 
                 ws.onopen = function (event) {
                     console.log("connected");
-                    document.getElementById("errorbanner").clearChildren();
+                    clearBanner();
                     if (reconnectInterval) {
                         clearInterval(reconnectInterval);
                         reconnectInterval = undefined;
@@ -233,6 +258,12 @@ Raphael(function () {
 
                             makeSelected(_display, _state);
                             makeSelectable(_display, _state);
+                        } else {
+                            if (_state.myPlayerIndex === 0) {
+                                banner("Waiting for other players to join, click Start Game when ready!");
+                            } else {
+                                banner("Waiting for other players to join...");
+                            }
                         }
 
                     } else if (inmsg.type === "newPlayerJoined") {
@@ -242,6 +273,8 @@ Raphael(function () {
 
                     } else if (inmsg.type === "startedGame") {
                         updateState(inmsg.state);
+
+                        clearBanner();
 
                         updateScores(_state);
                         updateBoard(_state);
@@ -269,18 +302,53 @@ Raphael(function () {
 
                         _display.sound.newPlay.play();
 
+                    } else if (inmsg.type === "completedGame") {
+                        updateState(inmsg.state);
+
+                        updateScores(_state);
+                        updateBoard(_state);
+                        updateOtherPlayers(_state);
+
+                        makeSelected(_display, _state);
+                        makeSelectable(_display, _state);
+
+                        var maxScore = getMaxScore(_state.players);
+                        var myScore = sumScore(_state.me.score);
+                        if (myScore >= maxScore) {
+                            banner("Game over!  Congratulations, you won!");
+                            _display.sound.completedGameWinner.play();
+                        } else {
+                            var aheadOfMe = _state.players.map(player => sumScore(player.score)).filter(score => score > myScore).length;
+                            var position = aheadOfMe + 1;
+                            var positionDescription = "" + position;
+                            if (position == 2) {
+                                positionDescription += "nd";
+                            } else if (position == 3) {
+                                positionDescription += "rd";
+                            } else {
+                                positionDescription += "th";
+                            }
+                            banner("Game over!  You came " + positionDescription + "!");
+                            _display.sound.completedGameNormal.play();
+                        }
+
                     } else {
                         console.log("Unknown message", inmsg);
                         if (inmsg.error === true) {
-                            document.getElementById("errorbanner").append("ERROR: " + JSON.stringify(inmsg));
+                            errorBanner(JSON.stringify(inmsg));
                         }
                     }
                 };
 
             } catch (e) {
-                document.getElementById("errorbanner").append("ERROR: Unable to connect to server, trying to reconnect...");
+                errorBanner("Unable to connect to server, trying to reconnect...");
             }
         }
+    }
+
+
+    function getMaxScore(players) {
+        return players.map(player => sumScore(player.score)).reduce((a, b) => (a > b ? a : b));
     }
 
 
@@ -343,7 +411,7 @@ Raphael(function () {
         console.log(document.cookie);
         var player_id = getPlayerId();
         if (!player_id) {
-            document.getElementById("errorbanner").append("ERROR: Unable to determine player_id, cannot proceed! :(");
+            errorBanner("Unable to determine player_id, cannot proceed! :(");
             throw("ERROR: Unable to determine player_id, cannot proceed! :(");
         }
         console.log(player_id);
@@ -523,7 +591,7 @@ Raphael(function () {
 
     function populateDisplay(display, state) {
         if (!state || !state.board || !state.board.cells || state.board.cells.length == 0) {
-            document.getElementById("errorbanner").append("ERROR: invalid state, cannot setup display! :(");
+            errorBanner("invalid state, cannot setup display! :(");
             throw("ERROR: invalid state, cannot setup display! :(");
         }
 
@@ -559,7 +627,7 @@ Raphael(function () {
         //            if (!resizeRequired) {
         //                console.log("resize banner");
         //                resizeRequired = true;
-        //                document.getElementById("errorbanner").append("ERROR: window size changed, refresh the page...");
+        //                errorBanner("window size changed, refresh the page...");
         //            }
         //        }).observe(_display.holder);
         //    }, 1000);
@@ -627,7 +695,7 @@ Raphael(function () {
             }).click(function() {
                 if (hasClass(line.node, "selectable")) {
                     if (!connectedToServer()) {
-                        document.getElementById("errorbanner").append("ERROR: Cannot move while not connected to server!");
+                        errorBanner("Cannot move while not connected to server!");
                     } else {
                         _display.sound.selectLine.play();
                         swapClass(line.node, "selectable", "selected");

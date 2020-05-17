@@ -22,10 +22,12 @@ MAX_PLAYERS = 8
 
 
 async def createNewGameState(db, board_id):
+    now = str(datetime.datetime.now())
     state = {
       "in_progress": False,
-      "time_started": str(datetime.datetime.now()),
+      "time_started": now,
       "time_ended": None,
+      "last_updated": now,
       "move_timeout": 30000,
       "num_events": 0,
       "cards_left": [],
@@ -90,6 +92,13 @@ async def createNewGameState(db, board_id):
     return state
 
 
+async def finishCompletedGame(db, state):
+    result = await db.completed_games.insert_one(state)
+    # FIXME: once confirmed as inserted, remove the current game
+    if result:
+        await db.games.delete_one({'_id': state["_id"]})
+
+
 async def addNewPlayerToGame(db, state, player_id, playerName):
     newPlayer = {
       "id": player_id,
@@ -110,12 +119,16 @@ async def addNewPlayerToGame(db, state, player_id, playerName):
       "active_cells": {}
     }
     state["players"].append(newPlayer)
-    await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("players", newPlayer)]))]))
+    now = str(datetime.datetime.now())
+    state["last_updated"] = now
+    await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("players", newPlayer)])), ("$set", SON([("last_updated", state["last_updated"]), ]))]))
 
 
 async def startGame(db, state):
     state["in_progress"] = True
-    await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("in_progress", True)]))]))
+    now = str(datetime.datetime.now())
+    state["last_updated"] = now
+    await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("in_progress", True)])), ("$set", SON([("last_updated", state["last_updated"]), ]))]))
     await generateRandomPlay(db, state)
 
 
@@ -123,26 +136,36 @@ async def getGameState(db, game_shortcode):
     return await db.games.find_one(SON([("shortcode", game_shortcode)]))
 
 async def generateRandomPlay(db, state):
+    now = str(datetime.datetime.now())
     if len(state["cards_left"]) < 2:
         # Start a new round!
+        if state["round"] == state["board"]["numRounds"] - 1:
+            # end of game
+            state["in_progress"] = False
+            state["time_ended"] = now
+            state["last_updated"] = now
+            await db.games.update_one({"_id": state["_id"]}, SON([
+                ("$set", SON([("last_updated", state["last_updated"]), \
+                ("in_progress", state["in_progress"]), \
+                ("time_ended", state["time_ended"]), ]))]))
+            return False
         state["round"] = state["round"]+1
-        if state["round"] == state["board"]["numRounds"]:
-               state["in_progress"] = False
-               state["time_ended"] = str(datetime.datetime.now())
-               return
         state["cards_left"] = state["cards_list"].copy()
         for player in state["players"]:
             prev_score = player["score"]["target_rounds"][state["round"]-1]
             player["score"]["target_rounds"].append(prev_score)
 
-
     newPlay = random.sample(state["cards_left"], 2)
     state["cards_left"].remove(newPlay[0])
     state["cards_left"].remove(newPlay[1])
     state["plays"].append(newPlay)
+    state["last_updated"] = now
     await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("plays", newPlay)])), \
-        ("$set", SON([("cards_left", state["cards_left"]), ("in_progress", state["in_progress"]), \
-        ("time_ended", state["time_ended"]), ("round", state["round"]), ("players", state["players"])]))]))
+        ("$set", SON([("last_updated", state["last_updated"]), \
+        ("cards_left", state["cards_left"]), \
+        ("round", state["round"]), \
+        ("players", state["players"])]))]))
+    return True
 
 
 
@@ -286,7 +309,10 @@ def registerWSForGame(game_id, player_id, ws):
 async def sendMsgToGame(game_id, msg):
     if game_id not in _allGameSockets:
         return
-    print(f'sending type {msg["type"]} to game {game_id}')
+    if "type" in msg:
+        print(f'sending type {msg["type"]} to game {game_id}')
+    else:
+        print(f'sending msg {json.dumps(msg)} to game {game_id}')
     for gameSocket in _allGameSockets[game_id].values():
         await sendMsgToWS(gameSocket, msg)
 
@@ -294,7 +320,10 @@ async def sendMsgToGame(game_id, msg):
 async def sendMsgToWS(ws, msg):
     text = json.dumps(msg)
     #print('sending', text)
-    print(f'sending type {msg["type"]} to ws')
+    if "type" in msg:
+        print(f'sending type {msg["type"]} to ws')
+    else:
+        print(f'sending msg {json.dumps(msg)} to ws')
     await ws.send_str(text)
 
 
@@ -422,12 +451,18 @@ async def websocket_handler(request):
                 computeConnectedsForPlayer(state["board"], player)
                 updatePlayerScore(prevPlayerState, player, state)
 
-                await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("players." + str(playerIndex), player)]))]))
+                now = str(datetime.datetime.now())
+                state["last_updated"] = now
+                await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("players." + str(playerIndex), player), ("last_updated", state["last_updated"])]))]))
                 await sendMsgToGame(game_shortcode, { "error": False, "type": "playerMoved", "state": state })
 
                 if allPlayersHaveMoved(state):
-                    await generateRandomPlay(db, state)
-                    await sendMsgToGame(game_shortcode, { "error": False, "type": "newPlay", "state": state })
+                    if await generateRandomPlay(db, state):
+                        await sendMsgToGame(game_shortcode, { "error": False, "type": "newPlay", "state": state })
+                    else:
+                        # game has finished
+                        await finishCompletedGame(db, state)
+                        await sendMsgToGame(game_shortcode, { "error": False, "type": "completedGame", "state": state })
 
             else:
                 print('unknown type', inmsg)
@@ -451,6 +486,10 @@ async def setup_db():
 
     # ensure correct indexes:
     await db.games.create_index([("shortcode", pymongo.ASCENDING)], unique=True)
+    await db.games.create_index([("last_updated", pymongo.ASCENDING)])
+    await db.completed_games.create_index([("shortcode", pymongo.ASCENDING)])
+    await db.completed_games.create_index([("last_updated", pymongo.ASCENDING)])
+    await db.player_cookies.create_index([("last_updated", pymongo.ASCENDING)])
 
     return db
 
