@@ -310,7 +310,6 @@ Raphael(function () {
                         updateOtherPlayers(_state);
 
                         makeSelected(_display, _state);
-                        makeSelectable(_display, _state);
 
                         var maxScore = getMaxScore(_state.players);
                         var myScore = sumScore(_state.me.score);
