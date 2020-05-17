@@ -760,20 +760,35 @@ Raphael(function () {
         for (var cell of state.board.cells) {
             var text = "";
             switch(cell.contents) {
-                case 'shopA':
-                    text = "A"
+                case 'shop0':
+                    text = state.me.perm[0]
                     break;
-                case 'shopB':
-                    text = "B"
+                case 'shop1':
+                    text = state.me.perm[1]
                     break;
-                case 'shopC':
-                    text = "C"
+                case 'shop2':
+                    text = state.me.perm[2]
                     break;
-                case 'shopD':
-                    text = "D"
+                case 'shop3':
+                    text = state.me.perm[3]
                     break;
-                case 'shopE':
-                    text = "E"
+                case 'shop4':
+                    text = state.me.perm[4]
+                    break;
+                case 'shop5':
+                    text = state.me.perm[5]
+                    break;
+                case 'shop6':
+                    text = state.me.perm[6]
+                    break;
+                case 'shop7':
+                    text = state.me.perm[7]
+                    break;
+                case 'shop8':
+                    text = state.me.perm[8]
+                    break;
+                case 'shop9':
+                    text = state.me.perm[9]
                     break;
             }
             if (text != "") {
