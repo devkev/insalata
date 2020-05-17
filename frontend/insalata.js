@@ -270,7 +270,7 @@ Raphael(function () {
                         } else {
                             clearBanner();
                             if (_state.myPlayerIndex === 0) {
-                                banner("Waiting for other players to join, click Start Game when ready!");
+                                banner("Send the URL to other players, click Start Game when they've joined!");
                             } else {
                                 banner("Waiting for the game to start...");
                             }
