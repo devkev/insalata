@@ -3171,7 +3171,7 @@
     "brown": { "normal": "#ffe4c450", "highlight": "#ffe4c4a0", "count": 5 }
   },
   "wilds": 3,
-  "shopNames": [ "shopA", "shopB", "shopC", "shopD", "shopE" ],
+  "shopNames": [ "shop0", "shop1", "shop2", "shop3", "shop4", "shop5", "shop6", "shop7", "shop8", "shop9" ],
   "targetsPoints": {
     "bowl": [ 1, 2 ],
     "lettuce": [ 2, 2 ],
@@ -3194,7 +3194,7 @@
       "x": 111.60254037844386,
       "y": 25,
       "color": "red",
-      "contents": "shopA"
+      "contents": "shop0"
     },
     {
       "x": 154.9038105676658,
@@ -3210,7 +3210,7 @@
       "x": 241.50635094610965,
       "y": 25,
       "color": "red",
-      "contents": "shopE"
+      "contents": "shop1"
     },
     {
       "x": 284.8076211353316,
@@ -3272,7 +3272,7 @@
       "x": 349.75952641916444,
       "y": 62.5,
       "color": "red",
-      "contents": "shopB"
+      "contents": "shop2"
     },
     {
       "x": 393.0607966083864,
@@ -3339,7 +3339,7 @@
       "x": 46.65063509461096,
       "y": 137.5,
       "color": "green",
-      "contents": "shopD"
+      "contents": "shop9"
     },
     {
       "x": 89.95190528383289,
@@ -3381,7 +3381,7 @@
       "x": 393.0607966083864,
       "y": 137.5,
       "color": "red",
-      "contents": "shopE"
+      "contents": "shop3"
     },
     {
       "x": 436.36206679760835,
@@ -3501,7 +3501,7 @@
       "x": 68.30127018922192,
       "y": 250,
       "color": "green",
-      "contents": "shopC"
+      "contents": "shop8"
     },
     {
       "x": 111.60254037844386,
@@ -3543,7 +3543,7 @@
       "x": 414.7114317029974,
       "y": 250,
       "color": "green",
-      "contents": "shopA"
+      "contents": "shop4"
     },
     {
       "x": 46.65063509461096,
@@ -3641,7 +3641,7 @@
       "x": 371.41016151377545,
       "y": 325,
       "color": "red",
-      "contents": "shopB"
+      "contents": "shop5"
     },
     {
       "x": 414.7114317029974,
@@ -3662,7 +3662,7 @@
       "x": 133.25317547305482,
       "y": 362.5,
       "color": "blue",
-      "contents": "shopD"
+      "contents": "shop7"
     },
     {
       "x": 176.55444566227678,
@@ -3678,7 +3678,7 @@
       "x": 263.1569860407206,
       "y": 362.5,
       "color": "green",
-      "contents": "shopC"
+      "contents": "shop6"
     },
     {
       "x": 306.45825622994255,

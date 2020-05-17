@@ -120,7 +120,12 @@ async def addNewPlayerToGame(db, state, player_id, playerName):
       "connected_shops": {},
       "active_cells": {}
     }
+
+    perms = db.permutations.aggregate([{"$sample": { "size" : 1}}])
+    permlist= await perms.to_list(1)
+    newPlayer["perm"] = permlist[0]["perm"]
     state["players"].append(newPlayer)
+
     now = str(datetime.datetime.now())
     state["last_updated"] = now
     await db.games.update_one({"_id": state["_id"]}, SON([("$push", SON([("players", newPlayer)])), ("$set", SON([("last_updated", state["last_updated"]), ]))]))
@@ -130,6 +135,7 @@ async def startGame(db, state):
     state["in_progress"] = True
     now = str(datetime.datetime.now())
     state["last_updated"] = now
+
     await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("in_progress", True), ("last_updated", state["last_updated"])]))]))
     await generateRandomPlay(db, state)
 
@@ -254,10 +260,13 @@ def updatePlayerScore(prevPlayerState, playerState, state):
 
         # Did I get the saladcop bonus?
         if playerState["score"]["saladcop_bonus"] == 0:
+            print("checking saladcop bonus")
             saladcop_bonus_num = len(state["board"]["targets"].keys())
+            print("target bonus", saladcop_bonus_num)
             for shop in list(playerState["targets_connected_to_shops"].keys()):
                 targets_connected = playerState["targets_connected_to_shops"][shop]
                 if len(targets_connected) >= saladcop_bonus_num:
+                    print("checking saladcop bonus types")
                     connected_types = []
                     for target in list(targets_connected.keys()):
                         target_type = state["board"]["cells"][int(target)]["contents"]
