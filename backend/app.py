@@ -158,6 +158,9 @@ async def startGame(db, state):
 async def getGameState(db, game_shortcode):
     return await db.games.find_one(SON([("shortcode", game_shortcode)]))
 
+async def getCompletedGameState(db, game_id):
+    return await db.completed_games.find_one(SON([("_id", game_id)]))
+
 async def generateRandomPlay(db, state):
     now = str(datetime.datetime.now())
     if len(state["cards_left"]) < 2:
@@ -541,6 +544,28 @@ async def websocket_handler(request):
                         # game has finished
                         await finishCompletedGame(db, state)
                         await sendMsgToGame(game_shortcode, { "error": False, "type": "completedGame", "state": state })
+
+            elif inmsg["type"] == "createFollowupGame":
+                if "gameId" not in inmsg:
+                    await sendMsgToWS(ws, { "error": True, "reason": "Missing game id" })
+                    continue
+
+                game_id = inmsg["gameId"]
+                state = await getCompletedGameState(db, game_id)
+                if not state:
+                    await sendMsgToWS(ws, { "error": True, "reason": "Unknown game id", "game_id": game_id })
+                    continue
+
+                board_id = state["board"]["_id"]
+                newState = await createNewGameState(db, board_id)
+                if not state:
+                    await sendMsgToWS(ws, { "error": True, "reason": "Unknown board id", "board_id": board_id })
+                    continue
+
+                await sendMsgToWS(ws, { "error": False, "type": "createdGame", "state": newState })
+
+                # This will also send to the person who clicked Create new game", but that's ok.
+                await sendMsgToGame(state["shortcode"], { "error": False, "type": "createdFollowupGame", "state": newState })
 
             else:
                 print('unknown type', inmsg)

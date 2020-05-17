@@ -112,6 +112,7 @@ Raphael(function () {
     var r = Raphael("holder", _display.full_w, _display.full_h);
 
     var gameShortCode = getGameShortCode();
+    var gameId;
 
     _display.cells = r.set();
     _display.edges = r.set();
@@ -233,11 +234,8 @@ Raphael(function () {
 
                     console.log("received", inmsg);
                     if (inmsg.type === "createdGame") {
-                        var newurl = window.location.href;
-                        if (newurl[newurl.length - 1] !== '/') {
-                            newurl += "/";
-                        }
-                        newurl += "g/" + inmsg.state.shortcode;
+                        var newurl = window.location.href.slice(0, -4) + inmsg.state.shortcode;
+                        console.log(newurl);
                         window.location.href = newurl;
 
                     } else if (inmsg.type === "enquiryResults") {
@@ -270,6 +268,7 @@ Raphael(function () {
                             // else do this
                             //updateColors(_state);
                         } else {
+                            clearBanner();
                             if (_state.myPlayerIndex === 0) {
                                 banner("Waiting for other players to join, click Start Game when ready!");
                             } else {
@@ -350,11 +349,20 @@ Raphael(function () {
                             _display.sound.completedGameNormal.play();
                         }
 
+                        removeClass(document.getElementById("createButton"), "hidden");
+
+                    } else if (inmsg.type === "createdFollowupGame") {
+                        if (!creatingFollowupGame) {
+                            followupGameShortCode = inmsg.state.shortcode;
+                            document.getElementById("createButton").innerText = "Join new game!";
+                        }
+
                     } else {
                         console.log("Unknown message", inmsg);
                         if (inmsg.error === true) {
                             errorBanner(JSON.stringify(inmsg));
                         }
+                        creatingFollowupGame = false;
                     }
                 };
 
@@ -363,7 +371,6 @@ Raphael(function () {
             }
         }
     }
-
 
     function getMaxScore(players) {
         return players.map(player => sumScore(player.score)).reduce((a, b) => (a > b ? a : b));
@@ -388,6 +395,12 @@ Raphael(function () {
     function createGame({boardId}) {
         // FIXME: board_id
         sendMessage("createGame");
+    }
+
+    var creatingFollowupGame = false;
+    function createFollowupGame() {
+        creatingFollowupGame = true;
+        sendMessage("createFollowupGame", { gameId });
     }
 
     function enquireGame({gameShortCode}) {
@@ -488,6 +501,7 @@ Raphael(function () {
         }
         console.log(newState);
         _state = newState;
+        gameId = _state._id;
     }
 
     function sumScore(playerScore) {
@@ -630,6 +644,17 @@ Raphael(function () {
 
     document.getElementById("startButton").onclick = function () {
         startGame({ gameShortCode });
+    };
+
+    var followupGameShortCode;
+    document.getElementById("createButton").onclick = function () {
+        if (followupGameShortCode) {
+            var newurl = window.location.href.slice(0, -4) + followupGameShortCode;
+            console.log(newurl);
+            window.location.href = newurl;
+        } else {
+            createFollowupGame();
+        }
     };
 
     function joinGameButton() {
