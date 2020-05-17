@@ -48,10 +48,12 @@ body {
     border-radius: 5px;
     padding: 5px;
     margin: 10px;
+    text-align: center;
 }
 
 #color-message {
     text-align: center;
+    margin-bottom: 5px;
 }
 
 #rounds-section {
@@ -84,6 +86,77 @@ body {
     font-size: 6em;
     text-align: center;
 }
+
+.patchcontainer {
+    display: inline-block;
+    text-align: center;
+}
+
+.patch {
+    width: 4em;
+    height: 4em;
+    border: 1px solid white;
+    border-radius: 5px;
+}
+
+.patch.wild {
+    background: linear-gradient(217deg, rgba(255,0,0,.8), rgba(255,0,0,0) 70.71%),
+                linear-gradient(127deg, rgba(0,255,0,.8), rgba(0,255,0,0) 70.71%),
+                linear-gradient(336deg, rgba(0,0,255,.8), rgba(0,0,255,0) 70.71%);
+/* FIXME: should be possible to animate the different linear gradients if they are separate and stacked and instead animate the opacities around. */
+/*    animation-duration: 1.5s;
+    animation-name: wild;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+    animation-timing-function: ease-in-out;
+    */
+}
+/*
+@keyframes wild {
+  from {
+    background-color: #f004;
+  }
+
+  25% {
+    background-color: #0f04;
+  }
+
+  75% {
+    background-color: #00f4;
+  }
+
+  to {
+    background-color: #f004;
+  }
+}
+*/
+/*
+@keyframes wild {
+  from {
+    background: linear-gradient(217deg, rgba(255,0,0,.8), rgba(255,0,0,0) 70.71%),
+                linear-gradient(127deg, rgba(0,255,0,.8), rgba(0,255,0,0) 70.71%),
+                linear-gradient(336deg, rgba(0,0,255,.8), rgba(0,0,255,0) 70.71%);
+  }
+
+  25% {
+    background: linear-gradient(127deg, rgba(0,255,0,.8), rgba(0,255,0,0) 70.71%),
+                linear-gradient(336deg, rgba(0,0,255,.8), rgba(0,0,255,0) 70.71%),
+                linear-gradient(217deg, rgba(255,0,0,.8), rgba(255,0,0,0) 70.71%);
+  }
+
+  75% {
+    background: linear-gradient(217deg, rgba(255,0,0,.8), rgba(255,0,0,0) 70.71%),
+                linear-gradient(127deg, rgba(0,255,0,.8), rgba(0,255,0,0) 70.71%),
+                linear-gradient(336deg, rgba(0,0,255,.8), rgba(0,0,255,0) 70.71%);
+  }
+
+  to {
+    background: linear-gradient(217deg, rgba(255,0,0,.8), rgba(255,0,0,0) 70.71%),
+                linear-gradient(127deg, rgba(0,255,0,.8), rgba(0,255,0,0) 70.71%),
+                linear-gradient(336deg, rgba(0,0,255,.8), rgba(0,0,255,0) 70.71%);
+  }
+}
+*/
 
 #join-section {
     margin-top: 20px;
