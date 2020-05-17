@@ -10,18 +10,27 @@ import string
 import datetime
 import ssl
 import pathlib
+import logging
 
 import aiohttp.web
 from motor.motor_asyncio import AsyncIOMotorClient
 import pymongo
 from bson import SON
 
+DEFAULT_PORT = 8080
+
+ssl_context = None
+certfile = pathlib.Path(__file__).with_name("fullchain1.pem")
+keyfile = pathlib.Path(__file__).with_name("privkey1.pem")
+if os.access(certfile, os.R_OK) and os.access(keyfile, os.R_OK):
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(certfile, keyfile)
+    DEFAULT_PORT = 8443
 
 HOST = os.getenv('HOST', '0.0.0.0')
-PORT = int(os.getenv('PORT', 8443))
+PORT = int(os.getenv('PORT', DEFAULT_PORT))
 
 MAX_PLAYERS = 8
-
 
 async def createNewGameState(db, board_id):
     now = str(datetime.datetime.now())
@@ -602,6 +611,7 @@ async def app():
     loop = asyncio.get_event_loop()
     db = await setup_db()
     app = aiohttp.web.Application(loop=loop)
+    logging.basicConfig(level=logging.DEBUG)
     app['db'] = db
     app.router.add_static('/assets', path="../assets", name='assets')
     app.router.add_route('GET', '/ws', websocket_handler)
@@ -612,10 +622,6 @@ async def app():
 
 
 if __name__ == '__main__':
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    certfile = pathlib.Path(__file__).with_name("fullchain1.pem")
-    keyfile = pathlib.Path(__file__).with_name("privkey1.pem")
-    ssl_context.load_cert_chain(certfile, keyfile)
     aiohttp.web.run_app(app(), host=HOST, port=PORT, ssl_context=ssl_context)
 
 # vim: et:ts=4:sw=4:si:ai:
