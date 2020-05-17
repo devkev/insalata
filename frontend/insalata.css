@@ -354,6 +354,51 @@ body {
     flex: 2;
 }
 
+#saladcopbonus {
+    position: absolute;
+    top: 50vh;
+    margin-top: -45vh;
+    left: 50vw;
+    margin-left: -45vh;
+    height: 90vh;
+}
+
+#saladcopbonus.appear {
+    animation-duration: 1.0s;
+    animation-name: saladcopappear;
+    animation-iteration-count: 1;
+    animation-direction: normal;
+    animation-timing-function: ease-in-out;
+}
+
+#saladcopbonus.disappear {
+    animation-duration: 0.5s;
+    animation-name: saladcopdisappear;
+    animation-iteration-count: 1;
+    animation-direction: normal;
+    animation-timing-function: ease-in-out;
+}
+
+@keyframes saladcopappear {
+  from {
+    transform: scale(0) rotate(0deg);
+  }
+
+  to {
+    transform: scale(1) rotate(720deg);
+  }
+}
+
+@keyframes saladcopdisappear {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(0);
+  }
+}
+
 /*
 vim: et:ts=4:sw=4:si:ai:
 */

@@ -84,6 +84,7 @@ Raphael(function () {
             otherPlayerScoreIncrease: new Howl({ src: ['/assets/515643_10246545-lq.mp3'] }),
             completedGameNormal: new Howl({ src: ['/assets/432874_4157918-lq.mp3'] }),
             completedGameWinner: new Howl({ src: ['/assets/456966_6456158-lq.mp3'] }),
+            saladCopBonus: new Howl({ src: ['/assets/361346_5506271-lq.mp3'] }),
         },
     };
     _display.cell_w = Math.sqrt(3) * _display.cellSize;
@@ -429,6 +430,18 @@ Raphael(function () {
         if (_state) {
             if (_state.me && sumScore(newState.me.score) > sumScore(_state.me.score)) {
                 _display.sound.increaseScore.play();
+            }
+            if (_state.me && newState.me.score.saladcop_bonus > 0 && _state.me.score.saladcop_bonus === 0) {
+            //if (_state.me && newState.me.moves.length === 2) {  // for testing
+                _display.sound.saladCopBonus.play();
+                addClass(document.getElementById("saladcopbonus"), "appear");
+                removeClass(document.getElementById("saladcopbonus"), "hidden");
+                setTimeout(function () {
+                    swapClass(document.getElementById("saladcopbonus"), "appear", "disappear");
+                    setTimeout(function () {
+                        addClass(document.getElementById("saladcopbonus"), "hidden");
+                    }, 500);
+                }, 2500);
             }
             for (var playerIndex = 0; playerIndex < newState.players.length; playerIndex++) {
                 var newPlayer = newState.players[playerIndex];
