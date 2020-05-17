@@ -201,6 +201,21 @@ body {
     margin-top: 20px;
 }
 
+#points-section {
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px;
+    text-align: initial;
+}
+#points-section img {
+    vertical-align: middle;
+}
+
+.pointsicon {
+    width: 1.5em;
+}
+
 #other-players-section {
     border: 2px solid white;
     border-radius: 5px;
