@@ -108,11 +108,13 @@ async def addNewPlayerToGame(db, state, player_id, playerName):
           "target_rounds": [0],
           "targets_previous_rounds": [],
           "shops_joined": [],
-          "bonuses": []
+          "bonuses": [],
+          "saladcop_bonus": 0
       },
       "moves": [],
       "cells_connected_to_shops": {},
       "targets_connected_to_shops": {},
+      "bonusLines": 0,
       "connected_targets": {},
       "connected_target_types": {},
       "connected_shops": {},
@@ -213,9 +215,9 @@ def computeConnectedsForPlayer(board, playerState):
                 for targetName in board["targets"].keys():
                     if connected_cell in board["targets"][targetName]:
                         playerState["connected_targets"][str(connected_cell)] = True
-                        if shopName not in playerState["targets_connected_to_shops"]:
-                            playerState["targets_connected_to_shops"][shopName] = {}
-                        playerState["targets_connected_to_shops"][shopName][str(connected_cell)] = True
+                        if str(shop) not in playerState["targets_connected_to_shops"]:
+                            playerState["targets_connected_to_shops"][str(shop)] = {}
+                        playerState["targets_connected_to_shops"][str(shop)][str(connected_cell)] = True
 
 def updatePlayerScore(prevPlayerState, playerState, state):
     if len(playerState["connected_shops"].keys()) > len(prevPlayerState["connected_shops"].keys()):
@@ -223,27 +225,47 @@ def updatePlayerScore(prevPlayerState, playerState, state):
         playerState["score"]["shops_joined"].append(5)
 
     if len(playerState["connected_targets"].keys()) > len(prevPlayerState["connected_targets"].keys()):
+        # newly connected targets
         current_round = state["round"]
 
-        # newly connected targets
         new_targets = []
         for connected_target in playerState["connected_targets"].keys():
             if connected_target not in prevPlayerState["connected_targets"]:
                 new_targets.append(connected_target)
 
-        print(new_targets)
+        # print(new_targets)
 
         for new_target in new_targets:
             target_type = state["board"]["cells"][int(new_target)]["contents"]
-            print(target_type)
+            # print(target_type)
             if target_type not in playerState["connected_target_types"]:
                 playerState["connected_target_types"][target_type] = 0
 
             num_targets = playerState["connected_target_types"][target_type]
-            print(num_targets)
+            # print(num_targets)
             score_increment = state["board"]["targetsPoints"][target_type][num_targets]
             playerState["score"]["target_rounds"][current_round] = playerState["score"]["target_rounds"][current_round] + score_increment
             playerState["connected_target_types"][target_type] = playerState["connected_target_types"][target_type] + 1
+
+            # Do i get a bonus line?
+            if playerState["connected_target_types"][target_type] == len(state["board"]["targetsPoints"][target_type]):
+                # I connected all the targets of this type
+                playerState["bonusLines"] = playerState["bonusLines"] + 1
+
+        # Did I get the saladcop bonus?
+        if playerState["score"]["saladcop_bonus"] == 0:
+            saladcop_bonus_num = len(state["board"]["targets"].keys())
+            for shop in list(playerState["targets_connected_to_shops"].keys()):
+                targets_connected = playerState["targets_connected_to_shops"][shop]
+                if len(targets_connected) >= saladcop_bonus_num:
+                    connected_types = []
+                    for target in list(targets_connected.keys()):
+                        target_type = state["board"]["cells"][int(target)]["contents"]
+                        if target_type not in connected_types:
+                            connected_types.append(target_type)
+                    if len(connected_types) == saladcop_bonus_num:
+                        playerState["score"]["saladcop_bonus"] = 15
+
 
 
 

@@ -512,6 +512,9 @@ Raphael(function () {
 
         document.getElementById("houses").innerHTML = sumScore(state.me.score.shops_joined);
         document.getElementById("bonuses").innerHTML = sumScore(state.me.score.bonuses);
+        if(state.me.score.saladcop_bonus != 0) {
+            document.getElementById("saladcop").innerHTML = state.me.score.saladcop_bonus;
+        }
     }
 
     function getCurrentColors(state) {
