@@ -44,6 +44,45 @@ body {
 }
 
 #color-section {
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px;
+}
+
+#color-message {
+    text-align: center;
+}
+
+#rounds-section {
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px;
+}
+#rounds-left-message {
+    text-align: center;
+}
+
+#rounds-left {
+    font-size: 4em;
+    text-align: center;
+}
+
+#moves-left-message {
+    text-align: center;
+}
+
+#moves-section {
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px;
+}
+
+#moves-left {
+    font-size: 6em;
+    text-align: center;
 }
 
 #join-section {
