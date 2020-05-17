@@ -324,9 +324,9 @@ async def getPlayerId(db, player_cookie, expected_player_id):
         return document["_id"]
 
 
-async def root_handler(request):
+async def main_handler(request, filename):
     #return aiohttp.web.HTTPFound('/index.html')
-    response = aiohttp.web.FileResponse('../frontend/index.html')
+    response = aiohttp.web.FileResponse(f'../frontend/{filename}.html')
     db = request.app['db']
     if "player_cookie" not in request.cookies or "player_id" not in request.cookies or await getPlayerId(db, request.cookies["player_cookie"], request.cookies["player_id"]) is None:
         now = datetime.datetime.now()
@@ -340,6 +340,12 @@ async def root_handler(request):
         response.set_cookie('player_cookie', player_cookie_doc["cookie"], max_age = 10*365*24*60*60)
         response.set_cookie('player_id', player_cookie_doc["_id"], max_age = 10*365*24*60*60)
     return response
+
+async def root_handler(request):
+    return await main_handler(request, 'landing')
+
+async def game_handler(request):
+    return await main_handler(request, 'index')
 
 
 def getPlayerIndex(players, player_id):
@@ -568,7 +574,7 @@ async def app():
     app.router.add_static('/assets', path="../assets", name='assets')
     app.router.add_route('GET', '/ws', websocket_handler)
     app.router.add_route('GET', "/", root_handler)
-    app.router.add_route('GET', "/g/{shortcode}", root_handler)
+    app.router.add_route('GET', "/g/{shortcode}", game_handler)
     app.router.add_static('/', path="../frontend", name='frontend')
     return app
 

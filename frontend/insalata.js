@@ -111,6 +111,8 @@ Raphael(function () {
     //var r = Raphael("holder", 640, 480);
     var r = Raphael("holder", _display.full_w, _display.full_h);
 
+    var gameShortCode = getGameShortCode();
+
     _display.cells = r.set();
     _display.edges = r.set();
     _display.edgesInteract = r.set();
@@ -140,18 +142,6 @@ Raphael(function () {
     // draw the bg
     //r.image(img.src, 0, 0, 640, 480);
 
-    var scheme = "ws";
-    if (document.location.protocol === "https:") {
-        scheme += "s";
-    }
-    var ws;
-    var reconnectInterval;
-    tryConnect();
-
-    function connectedToServer() {
-        return (ws && ws.readyState == WebSocket.OPEN);
-    }
-
     var bannerElem = document.getElementById("banner");
     var bannerMsgElem = document.getElementById("bannermsg");
 
@@ -178,6 +168,18 @@ Raphael(function () {
             errorBanner(msg);
         }
     }
+
+    function connectedToServer() {
+        return (ws && ws.readyState == WebSocket.OPEN);
+    }
+
+    var scheme = "ws";
+    if (document.location.protocol === "https:") {
+        scheme += "s";
+    }
+    var ws;
+    var reconnectInterval;
+    tryConnect();
 
     function tryConnect() {
         console.log("Trying to connect...");
@@ -216,13 +218,7 @@ Raphael(function () {
                             removeClass(selectable, "paused");
                         }
                     } else {
-                        if (document.location.pathname === '/') {
-                            // need to create a game
-                            createGame({/*board_id*/});
-                            // on successful response from this, redirect
-                        } else if (gameShortCode = getGameShortCode()) {
-                            enquireGame({ gameShortCode });
-                        }
+                        enquireGame({ gameShortCode });
                     }
                 };
 
@@ -250,9 +246,10 @@ Raphael(function () {
                         findMe(enquiryState);
                         updateOtherPlayers(enquiryState);
                         if (enquiryState.me) {
-                            joinGame({ gameShortCode: getGameShortCode() });
+                            joinGame({ gameShortCode });
                         } else {
                             removeClass(document.getElementById("join-section"), "hidden");
+                            document.getElementById("name").focus();
                         }
 
                     } else if (inmsg.type === "joinedGame") {
@@ -406,7 +403,6 @@ Raphael(function () {
     }
 
     function sendMove({edgeIndex}) {
-        gameShortCode = getGameShortCode();
         sendMessage("doMove", { gameShortCode, move: edgeIndex });
     }
 
@@ -633,7 +629,7 @@ Raphael(function () {
     }
 
     document.getElementById("startButton").onclick = function () {
-        startGame({ gameShortCode: getGameShortCode() });
+        startGame({ gameShortCode });
     };
 
     function joinGameButton() {
@@ -647,7 +643,7 @@ Raphael(function () {
             return;
         }
         nameElem.placeholder = "Enter your name";
-        joinGame({ gameShortCode: getGameShortCode(), playerName: name });
+        joinGame({ gameShortCode, playerName: name });
     };
 
     document.getElementById("joinButton").onclick = joinGameButton;
