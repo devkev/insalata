@@ -514,6 +514,13 @@ Raphael(function () {
         if(state.me.score.saladcop_bonus != 0) {
             document.getElementById("saladcop").innerHTML = state.me.score.saladcop_bonus;
         }
+
+        document.getElementById("rounds-left").innerHTML = (state.round + 1) + "&nbsp;of&nbsp;" + state.board.numRounds;
+        if (!state.in_progress && state.time_ended) {
+            document.getElementById("moves-left").innerHTML = 0;
+        } else {
+            document.getElementById("moves-left").innerHTML = (state.cards_left.length / 2) + 1;
+        }
     }
 
     function getCurrentColors(state) {
