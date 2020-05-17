@@ -254,7 +254,12 @@ def computeConnectedsForPlayer(board, playerState):
 def updatePlayerScore(prevPlayerState, playerState, state):
     if len(playerState["connected_shops"].keys()) > len(prevPlayerState["connected_shops"].keys()):
         # newly connected shops
-        playerState["score"]["shops_joined"].append(5)
+        newshops = len(playerState["connected_shops"].keys()) - len(prevPlayerState["connected_shops"].keys())
+        print(newshops)
+        print(newshops/2)
+        for i in range(0, int(newshops/2)):
+            print("one more shop")
+            playerState["score"]["shops_joined"].append(5)
 
     if len(playerState["connected_targets"].keys()) > len(prevPlayerState["connected_targets"].keys()):
         # newly connected targets
