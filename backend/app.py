@@ -8,6 +8,8 @@ import os
 import uuid
 import string
 import datetime
+import ssl
+import pathlib
 
 import aiohttp.web
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -610,6 +612,10 @@ async def app():
 
 
 if __name__ == '__main__':
-    aiohttp.web.run_app(app(), host=HOST, port=PORT)
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    certfile = pathlib.Path(__file__).with_name("fullchain1.pem")
+    keyfile = pathlib.Path(__file__).with_name("privkey1.pem")
+    ssl_context.load_cert_chain(certfile, keyfile)
+    aiohttp.web.run_app(app(), host=HOST, port=PORT, ssl_context=ssl_context)
 
 # vim: et:ts=4:sw=4:si:ai:
