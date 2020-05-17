@@ -554,10 +554,10 @@ Raphael(function () {
             document.getElementById("round"+round_num).innerHTML = state.me.score.target_rounds[i];
             //document.getElementById("jojo").innerHTML = "round"+round_num+"-message";
         }
-
         document.getElementById("houses").innerHTML = sumScore(state.me.score.shops_joined);
         document.getElementById("bonuses").innerHTML = sumScore(state.me.score.bonuses);
         if(state.me.score.saladcop_bonus != 0) {
+            removeClass(document.getElementById("saladcop-message"), "hidden");
             document.getElementById("saladcop").innerHTML = state.me.score.saladcop_bonus;
         }
 
