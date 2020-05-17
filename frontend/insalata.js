@@ -72,10 +72,57 @@ Raphael(function () {
 
     /////////////////////////////////////////////////////////////////
 
+    var _state;
+
+    var _display = {
+        cellSize: 25,
+        sound: {
+            selectLine: new Howl({ src: ['/assets/399934_1676145-lq.mp3'] }),
+            hoverLine: new Howl({ src: ['/assets/338229_3972805-lq.mp3'] }),
+            increaseScore: new Howl({ src: ['/assets/51715_113976-lq.mp3'] }),
+            newPlay: new Howl({ src: ['/assets/240776_4107740-lq.mp3'] }),
+            otherPlayerScoreIncrease: new Howl({ src: ['/assets/515643_10246545-lq.mp3'] }),
+        },
+    };
+    _display.cell_w = Math.sqrt(3) * _display.cellSize;
+    _display.cell_h = 2 * _display.cellSize;
+
+    function updateFullSize(display) {
+        display.holder = document.getElementById("holder");
+        display.full_w = display.holder.clientWidth - 5;
+        display.full_h = display.holder.clientHeight - 5;
+        console.log('full size is', display.full_w, display.full_h);
+    }
+    updateFullSize(_display);
+
+    //var r = Raphael("holder", 640, 480);
+    var r = Raphael("holder", _display.full_w, _display.full_h);
+
+    _display.cells = r.set();
+    _display.edges = r.set();
+    _display.edgesInteract = r.set();
+    _display.icons = {};
+    _display.glows = {};
+
+    function updateViewBox(display) {
+        var scale_w = display.full_w / display.board_w;
+        var scale_h = display.full_h / display.board_h;
+
+        var left_x = display.min_x;
+        var right_x = display.max_x;
+        if (scale_w > scale_h) {
+            var target_w = scale_w / scale_h * display.board_w;
+            var diff_w = target_w - display.board_w;
+            left_x -= diff_w / 2;
+            right_x += diff_w / 2;
+        }
+        r.setSize(display.full_w, display.full_h);
+        r.setViewBox(left_x, display.min_y, right_x, display.max_y);
+    }
+
+
     //var img = document.getElementById("bg");
     //img.style.display = "none";
-
-    var r = Raphael("holder", 640, 480);
 
     // draw the bg
     //r.image(img.src, 0, 0, 640, 480);
@@ -274,26 +321,6 @@ Raphael(function () {
         sendMessage("doMove", { gameShortCode, move: edgeIndex });
     }
 
-
-    var _state;
-
-    var _display = {
-        cellSize: 25,
-        cells: r.set(),
-        edges: r.set(),
-        edgesInteract: r.set(),
-        icons: {},
-        glows: {},
-        sound: {
-            selectLine: new Howl({ src: ['/assets/399934_1676145-lq.mp3'] }),
-            hoverLine: new Howl({ src: ['/assets/338229_3972805-lq.mp3'] }),
-            increaseScore: new Howl({ src: ['/assets/51715_113976-lq.mp3'] }),
-            newPlay: new Howl({ src: ['/assets/240776_4107740-lq.mp3'] }),
-            otherPlayerScoreIncrease: new Howl({ src: ['/assets/515643_10246545-lq.mp3'] }),
-        },
-    };
-    _display.w = Math.sqrt(3) * _display.cellSize;
-    _display.h = 2 * _display.cellSize;
 
     function getPlayerId() {
         // this is pretty dodgy, oh well. js-cookie is the right way to do it.
@@ -495,6 +522,50 @@ Raphael(function () {
     });
 
     function populateDisplay(display, state) {
+        if (!state || !state.board || !state.board.cells || state.board.cells.length == 0) {
+            document.getElementById("errorbanner").append("ERROR: invalid state, cannot setup display! :(");
+            throw("ERROR: invalid state, cannot setup display! :(");
+        }
+
+        // Find board bounding box.
+        display.min_x = state.board.cells[0].x;
+        display.max_x = state.board.cells[0].x;
+        display.min_y = state.board.cells[0].y;
+        display.max_y = state.board.cells[0].y;
+        for (var cell of state.board.cells) {
+            if(cell.color === "undefined") continue;
+            if (display.min_x > cell.x) display.min_x = cell.x;
+            if (display.max_x < cell.x) display.max_x = cell.x;
+            if (display.min_y > cell.y) display.min_y = cell.y;
+            if (display.max_y < cell.y) display.max_y = cell.y;
+        }
+
+        // Adjust because the cell.x and cell.y values are the centers of the hexes.
+        // Include an extra border of half cell width/height.
+        display.min_x -= display.cell_w;
+        display.max_x += display.cell_w;
+        display.min_y -= display.cell_h;
+        display.max_y += display.cell_h;
+        display.board_w = display.max_x - display.min_x;
+        display.board_h = display.max_y - display.min_y;
+
+        updateViewBox(display);
+
+        //if (ResizeObserver) {
+        //    var resizeRequired = false;
+        //    setTimeout(function () {
+        //        new ResizeObserver(function () {
+        //            console.log("resize");
+        //            if (!resizeRequired) {
+        //                console.log("resize banner");
+        //                resizeRequired = true;
+        //                document.getElementById("errorbanner").append("ERROR: window size changed, refresh the page...");
+        //            }
+        //        }).observe(_display.holder);
+        //    }, 1000);
+        //}
+
+
         var css = "";
         for (var cellColor in state.board.cellColors) {
             css += ".cell." + cellColor + " { fill: " + state.board.cellColors[cellColor].normal + "; } ";
@@ -510,7 +581,7 @@ Raphael(function () {
         }
 
         for (var cell of state.board.cells) {
-            if(cell.color == "undefined") {
+            if(cell.color === "undefined") {
                 // cell does not exist, skip drawing it
                 display.cells.push(r.path(""));
                 continue;

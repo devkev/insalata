@@ -1,15 +1,20 @@
+html {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     background: #333;
     color: #fff;
     font: 300 100.1% "Helvetica Neue", Helvetica, "Arial Unicode MS", Arial, sans-serif;
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 #holder {
-    height: 480px;
-    left: 50%;
-    margin: -240px 0 0 -320px;
-    position: absolute;
-    top: 50%;
-    width: 640px;
+    min-height: 100%;
 }
 
 #errorbanner {
@@ -23,13 +28,9 @@ body {
 }
 
 #score-section {
-    /*float: left;*/
-    /*width: 50%;*/
 }
 
 #color-section {
-    /*width: 50%;*/
-    /*float: right;*/
 }
 
 #join-section {
@@ -205,6 +206,27 @@ body {
     height: 2em;
     display: block;
     margin-bottom: -0.5em;
+}
+
+#content {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: row;
+}
+
+#left {
+    padding: 10px;
+    flex: min-content;
+}
+
+#right {
+    padding: 10px;
+    flex: min-content;
+}
+
+#center {
+    padding: 10px;
+    flex: 2;
 }
 
 /*

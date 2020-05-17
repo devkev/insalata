@@ -14,43 +14,46 @@
         </style>
     </head>
     <body>
-        <div id="errorbanner"></div>
-        <div style="float: left;">
-            <div id="title"><center><img src="/logo.png"><span>Insalata</span></center></div>
-            <div id="score-section">
-                <div id="myname-message"><span id="myname">&nbsp;</span></div>
-                <div id="score-message">Score: <span id="score">0</span></div>
-                <div id="round1-message"> Round 1: <span id="round1">0</span></div>
-                <!--
-                <div id="jojo-message"> Round jojo: <span id="jojo"> </span></div>
-                -->
-                <div id="round2-message" class="hidden"> Round 2: <span id="round2"> </span></div>
-                <div id="round3-message" class="hidden"> Round 3: <span id="round3"> </span></div>
-                <div id="houses-message">Houses: <span id="houses">0</span></div>
-                <div id="bonuses-message">Bonuses: <span id="bonuses">0</span></div>
+        <div id="content">
+            <div id="left">
+                <div id="title"><center><img src="/logo.png"><span>Insalata</span></center></div>
+                <div id="score-section">
+                    <div id="myname-message"><span id="myname">&nbsp;</span></div>
+                    <div id="score-message">Score: <span id="score">0</span></div>
+                    <div id="round1-message"> Round 1: <span id="round1">0</span></div>
+                    <!--
+                    <div id="jojo-message"> Round jojo: <span id="jojo"> </span></div>
+                    -->
+                    <div id="round2-message" class="hidden"> Round 2: <span id="round2"> </span></div>
+                    <div id="round3-message" class="hidden"> Round 3: <span id="round3"> </span></div>
+                    <div id="houses-message">Houses: <span id="houses">0</span></div>
+                    <div id="bonuses-message">Bonuses: <span id="bonuses">0</span></div>
+                </div>
+                <button id="startButton" class="nicebutton hidden" type=button>Start game</button>
+                <div id="join-section" class="hidden">
+                    <input id="name" placeholder="Enter your name" maxlength=20><br/>
+                    <button id="joinButton" class="nicebutton bluebutton" type=button>Join game</button>
+                </div>
+                <br/>
+                <div id="other-players-section">
+                    Other players:
+                    <ul id="other-players">
+                    </ul>
+                </div>
             </div>
-            <button id="startButton" class="nicebutton hidden" type=button>Start game</button>
-            <div id="join-section" class="hidden">
-                <input id="name" placeholder="Enter your name" maxlength=20><br/>
-                <button id="joinButton" class="nicebutton bluebutton" type=button>Join game</button>
+            <div id="center">
+                <div id="errorbanner"></div>
+                <div id="holder">
+                    <!-- <img id="bg" src="bg.png" width="640px" height="480px" /> -->
+                </div>
             </div>
-            <br/>
-            <div id="other-players-section">
-                Other players:
-                <ul id="other-players">
-                </ul>
+            <div id="right">
+                <div id="color-section">
+                    <div id="color-message">Colours this round:</div>
+                    <div id="color1-msg">Colour 1: <span id="color1"></span> </div>
+                    <div id="color2-msg">Colour 2: <span id="color2"></span> </div>
+                </div>
             </div>
-        </div>
-        <div style="float: right;">
-            <div id="color-section">
-                <div id="color-message">Colours this round:</div>
-                <div id="color1-msg">Colour 1: <span id="color1"></span> </div>
-                <div id="color2-msg">Colour 2: <span id="color2"></span> </div>
-            </div>
-        </div>
-        <div id="holder">
-            <!-- <img id="bg" src="bg.png" width="640px" height="480px" /> -->
-
         </div>
     </body>
 </html>
