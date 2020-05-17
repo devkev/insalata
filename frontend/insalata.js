@@ -601,6 +601,30 @@ Raphael(function () {
 
         document.getElementById("patch1").className = "patch " + currentColors[0];
         document.getElementById("patch2").className = "patch " + currentColors[1];
+
+        // Draw the patches for cards left
+        currentColors = []
+        numLeft = []
+        for (var cellColor in state.board.cellColors) {
+            currentColors.push(cellColor)
+            numLeft.push(state.cards_left.filter((v) => (v === cellColor)).length)
+        }
+        currentColors.push("wild")
+        numLeft.push(state.cards_left.filter((v) => (v === "wild")).length)
+
+
+        document.getElementById("cl1").innerHTML = numLeft[0];
+        document.getElementById("cl2").innerHTML = numLeft[1];
+        document.getElementById("cl3").innerHTML = numLeft[2];
+        document.getElementById("cl4").innerHTML = numLeft[3];
+        document.getElementById("cl5").innerHTML = numLeft[4];
+
+        document.getElementById("clpatch1").className = "patch small " + currentColors[0];
+        document.getElementById("clpatch2").className = "patch small " + currentColors[1];
+        document.getElementById("clpatch3").className = "patch small " + currentColors[2];
+        document.getElementById("clpatch4").className = "patch small " + currentColors[3];
+        document.getElementById("clpatch5").className = "patch small " + currentColors[4];
+
     }
 
     function makeSelected(display, state) {
@@ -875,6 +899,29 @@ Raphael(function () {
                 display.icons[cell.num].push(r.text(cell.x, cell.y, text).attr("font-size", "15px"));
             }
         }
+
+        // Draw the patches for cards left
+        currentColors = []
+        numLeft = []
+        for (var cellColor in state.board.cellColors) {
+            currentColors.push(cellColor)
+            numLeft.push(state.cards_left.filter((v) => (v === cellColor)).length)
+        }
+        currentColors.push("wild")
+        numLeft.push(state.cards_left.filter((v) => (v === "wild")).length)
+
+
+        document.getElementById("cl1").innerHTML = numLeft[0];
+        document.getElementById("cl2").innerHTML = numLeft[1];
+        document.getElementById("cl3").innerHTML = numLeft[2];
+        document.getElementById("cl4").innerHTML = numLeft[3];
+        document.getElementById("cl5").innerHTML = numLeft[4];
+
+        document.getElementById("clpatch1").className = "patch small " + currentColors[0];
+        document.getElementById("clpatch2").className = "patch small " + currentColors[1];
+        document.getElementById("clpatch3").className = "patch small " + currentColors[2];
+        document.getElementById("clpatch4").className = "patch small " + currentColors[3];
+        document.getElementById("clpatch5").className = "patch small " + currentColors[4];
 
         display.edgesInteract.toFront();
     }
