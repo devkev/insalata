@@ -130,7 +130,7 @@ async def startGame(db, state):
     state["in_progress"] = True
     now = str(datetime.datetime.now())
     state["last_updated"] = now
-    await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("in_progress", True)])), ("$set", SON([("last_updated", state["last_updated"]), ]))]))
+    await db.games.update_one({"_id": state["_id"]}, SON([("$set", SON([("in_progress", True), ("last_updated", state["last_updated"])]))]))
     await generateRandomPlay(db, state)
 
 
@@ -431,11 +431,10 @@ async def websocket_handler(request):
                         continue
 
                     await addNewPlayerToGame(db, state, player_id, playerName)
+                    # broadcast newPlayerJoined
+                    await sendMsgToGame(game_shortcode, { "error": False, "type": "newPlayerJoined", "state": state })
 
                 await sendMsgToWS(ws, { "error": False, "type": "joinedGame", "state": state })
-
-                # broadcast newPlayerJoined
-                await sendMsgToGame(game_shortcode, { "error": False, "type": "newPlayerJoined", "state": state })
 
                 if not state["in_progress"] and len(state["players"]) == MAX_PLAYERS:
                     await startGame(db, state)
