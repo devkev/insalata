@@ -118,12 +118,26 @@ async def addNewPlayerToGame(db, state, player_id, playerName):
       "connected_targets": {},
       "connected_target_types": {},
       "connected_shops": {},
+      "shop_pairs": {},
       "active_cells": {}
     }
 
+    # Add permutation
     perms = db.permutations.aggregate([{"$sample": { "size" : 1}}])
     permlist= await perms.to_list(1)
-    newPlayer["perm"] = permlist[0]["perm"]
+    myPerm = permlist[0]["perm"]
+    newPlayer["perm"] = myPerm
+
+    # Add pairs of shops
+    for letter in list(set(myPerm)):
+        i = myPerm.index(letter)
+        j = myPerm.index(letter, i+1)
+        shopi = "shop" + str(i)
+        shopj = "shop" + str(j)
+        newPlayer["shop_pairs"][shopi] = shopj
+        newPlayer["shop_pairs"][shopj] = shopi
+
+
     state["players"].append(newPlayer)
 
     now = str(datetime.datetime.now())
@@ -215,9 +229,20 @@ def computeConnectedsForPlayer(board, playerState):
         for shop in shops[shopName]:
             connected_cells = computeConnectedToCell(shop, player_cell_connections, playerState["moves"])
             playerState["cells_connected_to_shops"][shopName] = convert_dict_keys_to_strings(connected_cells)
+
+            thisShopsPairName = playerState["shop_pairs"][shopName]
+            thisShopsPairNum = shops[thisShopsPairName][0]
+
+            print("all cells for ", shopName, playerState["cells_connected_to_shops"][shopName])
+            print("all cells keys", list(playerState["cells_connected_to_shops"][shopName].keys()))
+            print("thisShopsPairName", thisShopsPairName)
+            print("thisShopsPairNum", thisShopsPairNum)
+
+            if str(thisShopsPairNum) in list(playerState["cells_connected_to_shops"][shopName].keys()):
+                playerState["connected_shops"][str(thisShopsPairNum)] = True
+
+
             for connected_cell in connected_cells:
-                if connected_cell in shops[shopName]:
-                    playerState["connected_shops"][str(connected_cell)] = True
                 for targetName in board["targets"].keys():
                     if connected_cell in board["targets"][targetName]:
                         playerState["connected_targets"][str(connected_cell)] = True
