@@ -17,6 +17,10 @@ body {
     min-height: 100%;
 }
 
+#landing {
+    max-width: 800px;
+}
+
 #banner {
     top: -2em;
     margin-bottom: -2em;
