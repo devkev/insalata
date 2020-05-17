@@ -74,6 +74,8 @@ Raphael(function () {
 
     var _state;
 
+    var bonusMoveSoundCounter = 0;
+
     var _display = {
         cellSize: 25,
         sound: {
@@ -85,6 +87,14 @@ Raphael(function () {
             completedGameNormal: new Howl({ src: ['/assets/432874_4157918-lq.mp3'] }),
             completedGameWinner: new Howl({ src: ['/assets/456966_6456158-lq.mp3'] }),
             saladCopBonus: new Howl({ src: ['/assets/361346_5506271-lq.mp3'] }),
+            bonusMove: new Howl({ src: ['/assets/253172_4404552-lq.mp3'],
+                                  onend: function () {
+                                      bonusMoveSoundCounter--;
+                                      if (bonusMoveSoundCounter > 0) {
+                                          this.play();
+                                      }
+                                  }
+                                }),
         },
     };
     _display.cell_w = Math.sqrt(3) * _display.cellSize;
@@ -257,8 +267,11 @@ Raphael(function () {
                             updateScores(_state);
                             updateBoard(_state);
 
+                            // FIXME: if allPlayersHaveMoved, then do these
                             makeSelected(_display, _state);
                             makeSelectable(_display, _state);
+                            // else do this
+                            //updateColors(_state);
                         } else {
                             if (_state.myPlayerIndex === 0) {
                                 banner("Waiting for other players to join, click Start Game when ready!");
@@ -291,6 +304,13 @@ Raphael(function () {
                         updateBoard(_state);
                         updateOtherPlayers(_state);
 
+                        if (_state.me.bonusLines > 0) {
+                            makeSelected(_display, _state);
+                            makeSelectable(_display, _state);
+                        } else {
+                            updateColors(_state);
+                        }
+
                     } else if (inmsg.type === "newPlay") {
                         updateState(inmsg.state);
 
@@ -311,6 +331,7 @@ Raphael(function () {
                         updateOtherPlayers(_state);
 
                         makeSelected(_display, _state);
+                        updateColors(_state);
 
                         var maxScore = getMaxScore(_state.players);
                         var myScore = sumScore(_state.me.score);
@@ -431,6 +452,7 @@ Raphael(function () {
             if (_state.me && sumScore(newState.me.score) > sumScore(_state.me.score)) {
                 _display.sound.increaseScore.play();
             }
+
             if (_state.me && newState.me.score.saladcop_bonus > 0 && _state.me.score.saladcop_bonus === 0) {
             //if (_state.me && newState.me.moves.length === 2) {  // for testing
                 _display.sound.saladCopBonus.play();
@@ -443,6 +465,17 @@ Raphael(function () {
                     }, 500);
                 }, 2500);
             }
+
+            if (_state.me && _state.me.bonusLines === 0 && newState.me.bonusLines > _state.me.bonusLines) {
+                // Previously had no bonus lines.  So the last move was a regular move.  So these are all new bonusLines.
+                bonusMoveSoundCounter = newState.me.bonusLines - _state.me.bonusLines;
+                _display.sound.bonusMove.play();
+            } else if (_state.me && _state.me.bonusLines > 0 && newState.me.bonusLines >= _state.me.bonusLines) {
+                // Previously had bonus lines.  SO the last move was a bonus move.  So having the same number means I got 1.  Having 1 more means I got 2. etc.
+                bonusMoveSoundCounter = newState.me.bonusLines - _state.me.bonusLines + 1;
+                _display.sound.bonusMove.play();
+            }
+
             for (var playerIndex = 0; playerIndex < newState.players.length; playerIndex++) {
                 var newPlayer = newState.players[playerIndex];
                 if (newState.me && newPlayer.id === newState.me.id) {
@@ -537,11 +570,21 @@ Raphael(function () {
     }
 
     function getCurrentColors(state) {
-        return state.plays[state.plays.length - 1];
+        if (state.me.bonusLines > 0) {
+            return [ "wild", "wild" ];
+        } else {
+            return state.plays[state.plays.length - 1];
+        }
     }
 
     function updateColors(state) {
         var currentColors = getCurrentColors(state);
+        if (state.me.bonusLines > 0) {
+            removeClass(document.getElementById("bonus-moves-section"), "hidden");
+            document.getElementById("bonus-moves").innerHTML = state.me.bonusLines;
+        } else {
+            addClass(document.getElementById("bonus-moves-section"), "hidden");
+        }
 
         document.getElementById("color1").innerHTML = currentColors[0];
         document.getElementById("color2").innerHTML = currentColors[1];

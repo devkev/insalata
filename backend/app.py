@@ -112,6 +112,7 @@ async def addNewPlayerToGame(db, state, player_id, playerName):
           "saladcop_bonus": 0
       },
       "moves": [],
+      "numBonusMovesPlayed": 0,
       "cells_connected_to_shops": {},
       "targets_connected_to_shops": {},
       "bonusLines": 0,
@@ -324,7 +325,7 @@ def getPlayerIndex(players, player_id):
 def allPlayersHaveMoved(state):
     numPlays = len(state["plays"])
     for player in state["players"]:
-        if len(player["moves"]) != numPlays:
+        if len(player["moves"]) - player["numBonusMovesPlayed"] != numPlays or player["bonusLines"] > 0:
             return False
     return True
 
@@ -475,11 +476,22 @@ async def websocket_handler(request):
                 prevPlayerState = copy.deepcopy(player)
                 edgeIndex = int(inmsg["move"])
 
-                # FIXME: validate that this edge is allowed
+                if player["bonusLines"] > 0:
+                    # this is a bonus move (any move is allowed)
+                    player["bonusLines"] = player["bonusLines"] - 1
+                    player["numBonusMovesPlayed"] = player["numBonusMovesPlayed"] + 1
+                else:
+                    # FIXME: validate that this edge is allowed
+                    pass
 
                 player["moves"].append(edgeIndex)
+
                 computeConnectedsForPlayer(state["board"], player)
                 updatePlayerScore(prevPlayerState, player, state)
+
+                #if random.uniform(0, 1) < 0.3:
+                #    print("giving player a bonus move")
+                #    player["bonusLines"] = 3
 
                 now = str(datetime.datetime.now())
                 state["last_updated"] = now

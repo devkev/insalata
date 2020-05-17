@@ -87,6 +87,22 @@ body {
     text-align: center;
 }
 
+#bonus-moves-message {
+    text-align: center;
+}
+
+#bonus-moves-section {
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px;
+}
+
+#bonus-moves {
+    font-size: 6em;
+    text-align: center;
+}
+
 .patchcontainer {
     display: inline-block;
     text-align: center;
