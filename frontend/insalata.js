@@ -270,7 +270,7 @@ Raphael(function () {
                         } else {
                             clearBanner();
                             if (_state.myPlayerIndex === 0) {
-                                banner("Send the URL to other players, click Start Game when they've joined!");
+                                banner("Share the URL with up to 7 others, click Start Game when everyone is ready. Or click Start Game for single-player.");
                             } else {
                                 banner("Waiting for the game to start...");
                             }
