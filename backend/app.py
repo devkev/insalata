@@ -207,13 +207,13 @@ async def generateRandomPlay(db, state):
 
 
 def computeConnectedToCell(cell, connected_cells, playerState):
-    #print("computing connected to cell", cell)
+    #logging.debug(f"computing connected to cell {cell}")
     seen = {}
     queue = [cell]
     while len(queue) > 0:
         current = queue[0]
         queue = queue[1:]
-        #print("current:", current, ", queue:", queue, ", seen: ", seen)
+        #logging.debug(f"current: {current} , queue: {queue} , seen: {seen}")
         if current not in seen:
             seen[current] = True
             for connected in connected_cells[current].keys():
@@ -248,10 +248,10 @@ def computeConnectedsForPlayer(board, playerState):
             thisShopsPairName = playerState["shop_pairs"][shopName]
             thisShopsPairNum = shops[thisShopsPairName][0]
 
-            print("all cells for ", shopName, playerState["cells_connected_to_shops"][shopName])
-            print("all cells keys", list(playerState["cells_connected_to_shops"][shopName].keys()))
-            print("thisShopsPairName", thisShopsPairName)
-            print("thisShopsPairNum", thisShopsPairNum)
+            #logging.debug(f'all cells for {shopName} {playerState["cells_connected_to_shops"][shopName]}')
+            #logging.debug(f'all cells keys {list(playerState["cells_connected_to_shops"][shopName].keys())}')
+            #logging.debug(f'thisShopsPairName {thisShopsPairName}')
+            #logging.debug(f'thisShopsPairNum {thisShopsPairNum}')
 
             if str(thisShopsPairNum) in list(playerState["cells_connected_to_shops"][shopName].keys()):
                 playerState["connected_shops"][str(thisShopsPairNum)] = True
@@ -269,10 +269,10 @@ def updatePlayerScore(prevPlayerState, playerState, state):
     if len(playerState["connected_shops"].keys()) > len(prevPlayerState["connected_shops"].keys()):
         # newly connected shops
         newshops = len(playerState["connected_shops"].keys()) - len(prevPlayerState["connected_shops"].keys())
-        print(newshops)
-        print(newshops/2)
+        logging.debug(f'newshops {newshops}')
+        logging.debug(f'newshops/2 {newshops/2}')
         for i in range(0, int(newshops/2)):
-            print("one more shop")
+            logging.debug("one more shop")
             playerState["score"]["shops_joined"].append(5)
 
     if len(playerState["connected_targets"].keys()) > len(prevPlayerState["connected_targets"].keys()):
@@ -284,16 +284,16 @@ def updatePlayerScore(prevPlayerState, playerState, state):
             if connected_target not in prevPlayerState["connected_targets"]:
                 new_targets.append(connected_target)
 
-        # print(new_targets)
+        # logging.debug(f'new_targets {new_targets}')
 
         for new_target in new_targets:
             target_type = state["board"]["cells"][int(new_target)]["contents"]
-            # print(target_type)
+            # logging.debug(f'target_type {target_type}')
             if target_type not in playerState["connected_target_types"]:
                 playerState["connected_target_types"][target_type] = 0
 
             num_targets = playerState["connected_target_types"][target_type]
-            # print(num_targets)
+            # logging.debug(f'num_targets {num_targets}')
             score_increment = state["board"]["targetsPoints"][target_type][num_targets]
             playerState["score"]["target_rounds"][current_round] = playerState["score"]["target_rounds"][current_round] + score_increment
             playerState["connected_target_types"][target_type] = playerState["connected_target_types"][target_type] + 1
@@ -305,13 +305,13 @@ def updatePlayerScore(prevPlayerState, playerState, state):
 
     # Did I get the saladcop bonus?
     if playerState["score"]["saladcop_bonus"] == 0:
-        print("checking saladcop bonus")
+        logging.debug("checking saladcop bonus")
         saladcop_bonus_num = len(state["board"]["targets"].keys())
-        print("target bonus", saladcop_bonus_num)
+        logging.debug(f'target bonus {saladcop_bonus_num}')
         for shop in list(playerState["targets_connected_to_shops"].keys()):
             targets_connected = playerState["targets_connected_to_shops"][shop]
             if len(targets_connected) >= saladcop_bonus_num:
-                print("checking saladcop bonus types")
+                logging.debug(f'checking saladcop bonus types')
                 connected_types = []
                 for target in list(targets_connected.keys()):
                     target_type = state["board"]["cells"][int(target)]["contents"]
@@ -392,27 +392,27 @@ async def sendMsgToGame(game_id, msg):
     if game_id not in _allGameSockets:
         return
     if "type" in msg:
-        print(f'sending type {msg["type"]} to game {game_id}')
+        logging.debug(f'sending type {msg["type"]} to game {game_id}')
     else:
-        print(f'sending msg {json.dumps(msg)} to game {game_id}')
+        logging.debug(f'sending msg {json.dumps(msg)} to game {game_id}')
     for gameSocket in _allGameSockets[game_id].values():
         await sendMsgToWS(gameSocket, msg)
 
 
 async def sendMsgToWS(ws, msg):
     text = json.dumps(msg)
-    #print('sending', text)
+    #logging.debug(f'sending {text}')
     if "type" in msg:
-        print(f'sending type {msg["type"]} to ws')
+        logging.debug(f'sending type {msg["type"]} to ws')
     else:
-        print(f'sending msg {json.dumps(msg)} to ws')
+        logging.debug(f'sending msg {json.dumps(msg)} to ws')
     await ws.send_str(text)
 
 
 async def websocket_handler(request):
     ws = aiohttp.web.WebSocketResponse()
     await ws.prepare(request)
-    print(request.cookies)
+    logging.debug(f'cookies {request.cookies}')
     if "player_cookie" not in request.cookies or "player_id" not in request.cookies:
         await ws.close()
         return ws
@@ -423,7 +423,7 @@ async def websocket_handler(request):
         await ws.close()
         return ws
 
-    print('new websocket connection accepted')
+    logging.debug('new websocket connection accepted')
 
     async for msg in ws:
         if msg.type == aiohttp.WSMsgType.TEXT:
@@ -432,7 +432,7 @@ async def websocket_handler(request):
             except json.JSONDecodeError:
                 await sendMsgToWS(ws, { "error": True, "reason": "Unable to parse input" })
                 continue
-            print('received', inmsg)
+            logging.debug(f'received {inmsg}')
 
             if "gameShortCode" in inmsg:
                 game_shortcode = inmsg["gameShortCode"]
@@ -540,7 +540,7 @@ async def websocket_handler(request):
                 updatePlayerScore(prevPlayerState, player, state)
 
                 #if random.uniform(0, 1) < 0.3:
-                #    print("giving player a bonus move")
+                #    logging.debug("giving player a bonus move")
                 #    player["bonusLines"] = 3
 
                 now = str(datetime.datetime.now())
@@ -579,10 +579,10 @@ async def websocket_handler(request):
                 await sendMsgToGame(state["shortcode"], { "error": False, "type": "createdFollowupGame", "state": newState })
 
             else:
-                print('unknown type', inmsg)
+                logging.debug(f'unknown type {inmsg}')
                 #await sendMsgToWS(ws, { "error": True, "reason": "Unknown type", "type": inmsg["type"] })
 
-    print('Websocket connection closed')
+    logging.debug('Websocket connection closed')
     return ws
 
 
@@ -591,12 +591,12 @@ DB_NAME = 'insalata'
 async def setup_db():
     db = AsyncIOMotorClient()[DB_NAME]
 
-    print("Connecting to db...")
+    logging.debug("Connecting to db...")
     num_boards = await db.boards.count_documents({})
     num_games = await db.games.count_documents({})
     num_completed_games = await db.completed_games.count_documents({})
     num_player_cookies = await db.player_cookies.count_documents({})
-    print(f"Database contains: {num_boards} boards, {num_games} in-progress games, {num_completed_games} completed games, {num_player_cookies} player auth cookies")
+    logging.debug(f"Database contains: {num_boards} boards, {num_games} in-progress games, {num_completed_games} completed games, {num_player_cookies} player auth cookies")
 
     # ensure correct indexes:
     await db.games.create_index([("shortcode", pymongo.ASCENDING)], unique=True)
@@ -608,11 +608,11 @@ async def setup_db():
     return db
 
 async def app():
+    debuglogfile = pathlib.Path(__file__).with_name("debug.log")
+    logging.basicConfig(filename=debuglogfile, level=logging.DEBUG, format='[%(asctime)s] %(levelname)s:%(message)s',datefmt='%Y-%m-%dT%H:%M:%S%z')
     loop = asyncio.get_event_loop()
     db = await setup_db()
     app = aiohttp.web.Application(loop=loop)
-    debuglogfile = pathlib.Path(__file__).with_name("debug.log")
-    logging.basicConfig(filename=debuglogfile, level=logging.DEBUG, format='[%(asctime)s] %(levelname)s:%(message)s',datefmt='%Y-%m-%dT%H:%M:%S%z')
     app['db'] = db
     app.router.add_static('/assets', path="../assets", name='assets')
     app.router.add_route('GET', '/ws', websocket_handler)
