@@ -607,27 +607,12 @@ async def setup_db():
 
     return db
 
-class MyFormatter(logging.Formatter):
-    converter = datetime.datetime.fromtimestamp
-    def formatTime(self, record, datefmt=None):
-        ct = self.converter(record.created)
-        if datefmt:
-            s = ct.strftime(datefmt)
-        else:
-            t = ct.strftime("%Y-%m-%d %H:%M:%S")
-            s = "%s,%03d foo" % (t, record.msecs)
-        return s
-
 async def app():
     loop = asyncio.get_event_loop()
     db = await setup_db()
     app = aiohttp.web.Application(loop=loop)
     debuglogfile = pathlib.Path(__file__).with_name("debug.log")
-    logging.basicConfig(filename=debuglogfile, level=logging.DEBUG, format='[%(asctime)s] %(levelname)s:%(message)s',datefmt='%Y-%m-%dT%H:%M:%S.%f%z')
-    handler = logging.StreamHandler()
-    logging.getLogger(__name__).addHandler(handler)
-    formatter = MyFormatter(fmt='%(asctime)s %(message)s',datefmt='%Y-%m-%dT%H:%M:%S.%f%z')
-    handler.setFormatter(formatter)
+    logging.basicConfig(filename=debuglogfile, level=logging.DEBUG, format='[%(asctime)s] %(levelname)s:%(message)s',datefmt='%Y-%m-%dT%H:%M:%S%z')
     app['db'] = db
     app.router.add_static('/assets', path="../assets", name='assets')
     app.router.add_route('GET', '/ws', websocket_handler)
